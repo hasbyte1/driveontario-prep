@@ -1,73 +1,189 @@
-# Welcome to your Lovable project
+# Ontario DrivePrep - Master Your G1 Test 🚗
 
-## Project info
+A Progressive Web App (PWA) designed to help users study for the Ontario Class G driver's license exam with practice tests, flashcards, and progress tracking.
 
-**URL**: https://lovable.dev/projects/f01a6fcd-ae95-4677-beb8-026167418a88
+## 🌟 Features
 
-## How can I edit this code?
+### Core Functionality
+- **Practice Tests**: 40-question G1 simulation with timer and instant feedback
+- **Flashcards**: Swipeable study cards with spaced repetition tracking
+- **Progress Tracking**: Category mastery, badges, test history, and streak tracking
+- **Offline Support**: All content cached locally using localStorage
+- **PWA Ready**: Install directly to home screen on mobile devices
 
-There are several ways of editing your application.
+### Study Content
+- 85+ practice questions across 6 categories:
+  - Road Signs & Signals
+  - Rules of the Road
+  - Safe Driving & Vehicle Handling
+  - Alcohol/Drugs & Penalties
+  - Licensing & Documents
+  - Miscellaneous
+- Detailed explanations for each answer
+- Based on Ontario Driver's Handbook guidelines
 
-**Use Lovable**
+### Gamification
+- Daily streak tracking
+- Achievement badges (Sign Master, Road Scholar, Perfect Score, Consistent Learner)
+- Progress visualization with charts
+- Test history and performance analytics
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f01a6fcd-ae95-4677-beb8-026167418a88) and start prompting.
+## 🚀 Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
+- Node.js 16+ and npm
+- Modern web browser (Chrome, Safari, Firefox, Edge)
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to project
+cd ontario-driveprep
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Visit `http://localhost:8080` to view the app.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Building for Production
 
-**Use GitHub Codespaces**
+```bash
+# Build the app
+npm run build
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Preview production build
+npm run preview
+```
 
-## What technologies are used for this project?
+## 📱 Installing as PWA
 
-This project is built with:
+### On Mobile (iOS)
+1. Open the app in Safari
+2. Tap the Share button
+3. Scroll down and tap "Add to Home Screen"
+4. Tap "Add"
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### On Mobile (Android)
+1. Open the app in Chrome
+2. Tap the menu (three dots)
+3. Tap "Add to Home Screen"
+4. Tap "Add"
 
-## How can I deploy this project?
+### On Desktop
+1. Open the app in Chrome/Edge
+2. Look for the install icon in the address bar
+3. Click "Install"
 
-Simply open [Lovable](https://lovable.dev/projects/f01a6fcd-ae95-4677-beb8-026167418a88) and click on Share -> Publish.
+## 🏗️ Project Structure
 
-## Can I connect a custom domain to my Lovable project?
+```
+ontario-driveprep/
+├── src/
+│   ├── components/        # Reusable UI components
+│   │   ├── ui/           # shadcn components
+│   │   ├── InstallPrompt.tsx
+│   │   ├── ProgressBar.tsx
+│   │   └── StatCard.tsx
+│   ├── data/             # Question bank and data
+│   │   └── questions.ts
+│   ├── pages/            # Route pages
+│   │   ├── Dashboard.tsx
+│   │   ├── PracticeTest.tsx
+│   │   ├── TestResults.tsx
+│   │   ├── Flashcards.tsx
+│   │   └── Progress.tsx
+│   ├── utils/            # Helper functions
+│   │   └── storage.ts    # LocalStorage utilities
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── public/               # Static assets
+│   ├── pwa-*.png        # PWA icons
+│   └── apple-touch-icon.png
+├── vite.config.ts       # Vite + PWA config
+└── package.json
+```
 
-Yes, you can!
+## 🎨 Tech Stack
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Routing**: React Router v6
+- **State Management**: React hooks + localStorage
+- **PWA**: vite-plugin-pwa + Workbox
+- **Icons**: Lucide React
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📝 Expanding Content
+
+To add more questions, edit `src/data/questions.ts`:
+
+```typescript
+export const questions: Question[] = [
+  {
+    id: "unique_id",
+    category: CATEGORIES.SIGNS, // or other category
+    question: "Your question here?",
+    options: ["Option A", "Option B", "Option C", "Option D"],
+    correctAnswer: 0, // Index of correct option (0-3)
+    explanation: "Detailed explanation here"
+  },
+  // ... more questions
+];
+```
+
+## 🔒 Data Privacy
+
+- All user data is stored locally in the browser (localStorage)
+- No personal information is collected or sent to servers
+- Progress data can be cleared by clearing browser data
+
+## 📚 Study Tips
+
+1. **Start with categories** you're least familiar with
+2. **Review explanations** even when you answer correctly
+3. **Maintain your streak** for consistent learning
+4. **Take full practice tests** to simulate the real exam
+5. **Aim for 80%+** consistently before booking your G1 test
+
+## 🤝 Contributing
+
+This is a Lovable-generated project. To contribute:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## ⚖️ Legal Disclaimer
+
+**For study purposes only. Not official advice.**
+
+This app is designed to help study for the Ontario G1 test but is not affiliated with the Ontario Ministry of Transportation. Always refer to the official Ontario Driver's Handbook for the most current information.
+
+## 📄 License
+
+MIT License - Feel free to use this project for learning purposes.
+
+## 🔗 Resources
+
+- [Official Ontario Driver's Handbook](https://www.ontario.ca/document/official-mto-drivers-handbook)
+- [Book Your G1 Test](https://drivetest.ca/)
+- [Lovable Documentation](https://docs.lovable.dev/)
+
+## 🙏 Acknowledgments
+
+- Built with [Lovable](https://lovable.dev)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Icons from [Lucide](https://lucide.dev/)
+
+---
+
+**Good luck on your G1 test!** 🎉

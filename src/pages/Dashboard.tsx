@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/StatCard";
 import { ProgressBar } from "@/components/ProgressBar";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { getStoredProgress, updateStreak, saveProgress, checkAndAwardBadges, getBadgeInfo } from "@/utils/storage";
 import { getTotalQuestions } from "@/data/questions";
 import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award } from "lucide-react";
@@ -42,6 +43,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <InstallPrompt />
       {/* Header */}
       <div className="bg-gradient-to-br from-primary to-secondary p-6 text-primary-foreground">
         <div className="max-w-4xl mx-auto">
