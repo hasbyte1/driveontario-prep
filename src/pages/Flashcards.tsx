@@ -85,6 +85,15 @@ const Flashcards = () => {
                   <div className="text-sm text-muted-foreground mb-4">
                     {currentCard.category}
                   </div>
+                  {currentCard.imageUrl && (
+                    <div className="mb-6 flex justify-center">
+                      <img 
+                        src={currentCard.imageUrl} 
+                        alt="Road sign" 
+                        className="w-40 h-40 object-contain"
+                      />
+                    </div>
+                  )}
                   <h2 className="text-2xl font-bold mb-6">
                     {currentCard.question}
                   </h2>

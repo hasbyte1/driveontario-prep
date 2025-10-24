@@ -155,6 +155,15 @@ const PracticeTest = () => {
               <h2 className="text-xl font-semibold mb-4">
                 {currentQuestion.question}
               </h2>
+              {currentQuestion.imageUrl && (
+                <div className="mb-4 flex justify-center">
+                  <img 
+                    src={currentQuestion.imageUrl} 
+                    alt="Road sign" 
+                    className="w-32 h-32 object-contain"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Options */}
