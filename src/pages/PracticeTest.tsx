@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -7,12 +7,16 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { getRandomQuestions, CATEGORIES } from "@/data/questions";
 import { getStoredProgress, saveProgress, type TestResult } from "@/utils/storage";
-import { ArrowRight, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Home } from "lucide-react";
 import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const PracticeTest = () => {
   const navigate = useNavigate();
-  const [questions] = useState(() => getRandomQuestions(40));
+  const [searchParams] = useSearchParams();
+  const category = searchParams.get("category") || undefined;
+  
+  const [questions] = useState(() => getRandomQuestions(40, category));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -70,6 +74,23 @@ const PracticeTest = () => {
     } else {
       handleFinishTest();
     }
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+      setSelectedAnswer(answers[currentIndex - 1]);
+      setShowExplanation(answers[currentIndex - 1] !== null);
+    }
+  };
+
+  const handleReset = () => {
+    setCurrentIndex(0);
+    setSelectedAnswer(null);
+    setShowExplanation(false);
+    setAnswers(Array(40).fill(null));
+    setTimeLeft(45 * 60);
+    toast.success("Test reset successfully");
   };
 
   const handleFinishTest = () => {
@@ -130,16 +151,53 @@ const PracticeTest = () => {
       <div className="bg-card border-b sticky top-0 z-10 shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium">
-              Question {currentIndex + 1} of {questions.length}
-            </span>
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4" />
-              <span className={timeLeft < 300 ? "text-destructive font-bold" : "font-medium"}>
-                {minutes}:{seconds.toString().padStart(2, "0")}
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate("/practice-selection")}
+              >
+                <Home className="w-4 h-4" />
+              </Button>
+              <span className="text-sm font-medium">
+                Question {currentIndex + 1} of {questions.length}
               </span>
             </div>
+            <div className="flex items-center gap-3">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <RotateCcw className="w-4 h-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Reset Test?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will clear all your answers and restart the test. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleReset}>
+                      Reset Test
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="w-4 h-4" />
+                <span className={timeLeft < 300 ? "text-destructive font-bold" : "font-medium"}>
+                  {minutes}:{seconds.toString().padStart(2, "0")}
+                </span>
+              </div>
+            </div>
           </div>
+          {category && (
+            <div className="text-xs text-muted-foreground mb-2">
+              Category: {category}
+            </div>
+          )}
           <Progress value={((currentIndex + 1) / questions.length) * 100} />
         </div>
       </div>
@@ -214,15 +272,33 @@ const PracticeTest = () => {
             {/* Actions */}
             <div className="mt-6 flex gap-3">
               {!showExplanation ? (
-                <Button 
-                  className="flex-1" 
-                  onClick={handleSubmitAnswer}
-                  disabled={selectedAnswer === null}
-                >
-                  Submit Answer
-                </Button>
+                <>
+                  <Button 
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={currentIndex === 0}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
+                  <Button 
+                    className="flex-1" 
+                    onClick={handleSubmitAnswer}
+                    disabled={selectedAnswer === null}
+                  >
+                    Submit Answer
+                  </Button>
+                </>
               ) : (
                 <>
+                  <Button 
+                    variant="outline"
+                    onClick={handlePrevious}
+                    disabled={currentIndex === 0}
+                  >
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back
+                  </Button>
                   <Button 
                     className="flex-1 gap-2" 
                     onClick={handleNext}

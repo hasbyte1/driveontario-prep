@@ -153,7 +153,7 @@ const Dashboard = () => {
           <Button 
             className="w-full h-14 text-lg gap-2" 
             size="lg"
-            onClick={() => navigate("/practice")}
+            onClick={() => navigate("/practice-selection")}
           >
             <Brain className="w-5 h-5" />
             Start Practice Test
