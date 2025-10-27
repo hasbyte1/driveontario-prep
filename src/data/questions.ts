@@ -771,6 +771,374 @@ export const questions: Question[] = [
     correctAnswer: 3,
     explanation: "As of April 2019, Ontario no longer requires Drive Clean emissions testing for light vehicles."
   },
+  
+  // ========== ADDITIONAL RULES OF THE ROAD QUESTIONS ==========
+  {
+    id: "rules_201",
+    category: CATEGORIES.RULES,
+    question: "How far must you stop from a railway crossing when a train is approaching?",
+    options: ["At least 3 metres", "At least 5 metres", "At least 10 metres", "At least 15 metres"],
+    correctAnswer: 1,
+    explanation: "When a train is coming, you must stop at least 5 metres from the nearest rail or gate. Never race a train to a crossing."
+  },
+  {
+    id: "rules_202",
+    category: CATEGORIES.RULES,
+    question: "What should you do if you get trapped on a railway crossing?",
+    options: ["Stay in vehicle", "Immediately get everyone out and away", "Sound horn", "Wait for help"],
+    correctAnswer: 1,
+    explanation: "If trapped on a crossing, immediately get everyone out and away from the vehicle. Move to a safe place and contact authorities."
+  },
+  {
+    id: "rules_203",
+    category: CATEGORIES.RULES,
+    question: "How far must you stop behind a stopped school bus with flashing red lights?",
+    options: ["10 metres", "15 metres", "20 metres", "30 metres"],
+    correctAnswer: 2,
+    explanation: "When approaching a stopped school bus from behind with its red lights flashing, you must stop at least 20 metres away."
+  },
+  {
+    id: "rules_204",
+    category: CATEGORIES.RULES,
+    question: "How many demerit points do you get for failing to stop for a school bus?",
+    options: ["3 points", "4 points", "6 points", "7 points"],
+    correctAnswer: 2,
+    explanation: "Failing to stop for a stopped school bus with flashing red lights results in 6 demerit points for a first offence, plus heavy fines."
+  },
+  {
+    id: "rules_205",
+    category: CATEGORIES.RULES,
+    question: "When do school buses use their upper alternating red lights?",
+    options: ["Always when moving", "Only at school zones", "When stopped for loading/unloading", "At railway crossings"],
+    correctAnswer: 2,
+    explanation: "School buses use upper alternating red flashing lights when stopped to load or unload passengers. You must stop when you see these lights."
+  },
+  {
+    id: "rules_206",
+    category: CATEGORIES.RULES,
+    question: "Must you stop for a school bus on a road with a median strip if you're approaching from the front?",
+    options: ["Yes, always", "No, only vehicles behind must stop", "Only during school hours", "Only if children are visible"],
+    correctAnswer: 1,
+    explanation: "On a road with a median strip (physical barrier), only vehicles coming from behind the bus must stop. However, always be cautious and watch for children."
+  },
+  {
+    id: "rules_207",
+    category: CATEGORIES.RULES,
+    question: "At a pedestrian crossover, when can you proceed after pedestrians have crossed?",
+    options: ["As soon as they're off your lane", "When they reach the other side", "Only when completely on sidewalk", "After 3 seconds"],
+    correctAnswer: 2,
+    explanation: "You must wait until pedestrians and school crossing guards have crossed and are safely on the sidewalk before proceeding."
+  },
+  {
+    id: "rules_208",
+    category: CATEGORIES.RULES,
+    question: "Can you pass another vehicle within 30 metres of a pedestrian crossover?",
+    options: ["Yes", "No", "Only if no pedestrians present", "Yes, if safe"],
+    correctAnswer: 1,
+    explanation: "You must not pass any vehicle within 30 metres of a pedestrian crossover for safety reasons."
+  },
+  {
+    id: "rules_209",
+    category: CATEGORIES.RULES,
+    question: "At an uncontrolled intersection, if two vehicles arrive at the same time, who has the right-of-way?",
+    options: ["Vehicle on the left", "Vehicle on the right", "Larger vehicle", "Vehicle going straight"],
+    correctAnswer: 1,
+    explanation: "At an uncontrolled intersection where vehicles arrive at the same time, the driver on the left must yield to the driver on the right."
+  },
+  {
+    id: "rules_210",
+    category: CATEGORIES.RULES,
+    question: "What must you do when entering a road from a private driveway?",
+    options: ["Sound horn", "Enter quickly", "Yield to all vehicles and pedestrians", "Take right-of-way"],
+    correctAnswer: 2,
+    explanation: "When entering a road from a private road or driveway, you must yield to vehicles on the road and pedestrians on the sidewalk."
+  },
+  {
+    id: "rules_211",
+    category: CATEGORIES.RULES,
+    question: "At a controlled intersection with a green light that has been green for a while, what should you do?",
+    options: ["Speed up", "Maintain speed", "Be prepared to stop when it turns yellow", "Stop immediately"],
+    correctAnswer: 2,
+    explanation: "If the light has been green for a while, be prepared to stop when it turns yellow. However, if you are too close to stop safely, proceed with caution."
+  },
+  {
+    id: "rules_212",
+    category: CATEGORIES.RULES,
+    question: "Where there is no stop line, crosswalk, or sidewalk at an intersection with a stop sign, where must you stop?",
+    options: ["Before the intersection", "At the edge of the intersection", "In the middle of the intersection", "After the intersection"],
+    correctAnswer: 1,
+    explanation: "If there is no stop line, crosswalk, or sidewalk, stop at the edge of the intersection and wait until the way is clear."
+  },
+  {
+    id: "rules_213",
+    category: CATEGORIES.RULES,
+    question: "Must you stop at a railway crossing if there is a stop sign?",
+    options: ["No, stop signs don't apply to railway crossings", "Yes, unless directed otherwise by a flagman", "Only if a train is visible", "No, only slow down"],
+    correctAnswer: 1,
+    explanation: "If you approach a railway crossing with a stop sign, you must stop unless otherwise directed by a flagman."
+  },
+  {
+    id: "rules_214",
+    category: CATEGORIES.RULES,
+    question: "How long can it take a train to stop under full emergency braking?",
+    options: ["100 metres", "500 metres", "1 kilometre", "Up to 2 kilometres"],
+    correctAnswer: 3,
+    explanation: "Remember it can take up to 2 kilometres for a train to stop under full emergency braking. Never try to race a train!"
+  },
+  {
+    id: "rules_215",
+    category: CATEGORIES.RULES,
+    question: "What should you do if a railway crossing has flashing signal lights?",
+    options: ["Slow down and proceed", "Stop and wait until lights stop flashing", "Speed up to cross quickly", "Proceed if no train visible"],
+    correctAnswer: 1,
+    explanation: "Wait until signal lights stop flashing and, if there's a gate or barrier, wait until it rises before crossing."
+  },
+  
+  // ========== ADDITIONAL LICENSE & DOCUMENTS QUESTIONS ==========
+  {
+    id: "license_021",
+    category: CATEGORIES.LICENSE,
+    question: "Must you carry your driver's licence with you when driving?",
+    options: ["No", "Yes", "Only on highways", "Only during day"],
+    correctAnswer: 1,
+    explanation: "You must carry your licence with you whenever you drive and produce it when a police officer requests it."
+  },
+  {
+    id: "license_022",
+    category: CATEGORIES.LICENSE,
+    question: "Is it legal to lend your driver's licence to someone?",
+    options: ["Yes, in emergencies", "Yes, for identification", "No, never permitted", "Yes, to learners"],
+    correctAnswer: 2,
+    explanation: "It is illegal to lend your driver's licence. You cannot lend it, let someone else use it, or use an altered licence."
+  },
+  {
+    id: "license_023",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points result in suspension for novice (G1/G2) drivers?",
+    options: ["6 points", "9 points", "12 points", "15 points"],
+    correctAnswer: 1,
+    explanation: "Novice G1 and G2 drivers face a 60-day licence suspension if they accumulate 9 or more demerit points."
+  },
+  {
+    id: "license_024",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points result in suspension for fully licensed drivers?",
+    options: ["9 points", "12 points", "15 points", "18 points"],
+    correctAnswer: 2,
+    explanation: "Fully licensed drivers face a 30-day suspension at 15 demerit points. The points are then reduced to 7 after the suspension."
+  },
+  {
+    id: "license_025",
+    category: CATEGORIES.LICENSE,
+    question: "How long do demerit points stay on your driving record?",
+    options: ["1 year", "2 years", "3 years", "5 years"],
+    correctAnswer: 1,
+    explanation: "Demerit points stay on your record for 2 years from the date of the offence."
+  },
+  {
+    id: "license_026",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points do you receive for careless driving?",
+    options: ["3 points", "4 points", "6 points", "7 points"],
+    correctAnswer: 2,
+    explanation: "Careless driving results in 6 demerit points, one of the most serious driving offences in terms of demerit points."
+  },
+  {
+    id: "license_027",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for exceeding the speed limit by 16-29 km/h?",
+    options: ["2 points", "3 points", "4 points", "6 points"],
+    correctAnswer: 1,
+    explanation: "Exceeding the speed limit by 16 to 29 km/h results in 3 demerit points."
+  },
+  {
+    id: "license_028",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for exceeding the speed limit by 30-49 km/h?",
+    options: ["3 points", "4 points", "6 points", "7 points"],
+    correctAnswer: 1,
+    explanation: "Exceeding the speed limit by 30 to 49 km/h results in 4 demerit points."
+  },
+  {
+    id: "license_029",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for exceeding the speed limit by 50 km/h or more?",
+    options: ["4 points", "6 points", "7 points", "9 points"],
+    correctAnswer: 1,
+    explanation: "Exceeding the speed limit by 50 km/h or more results in 6 demerit points, the same as racing."
+  },
+  {
+    id: "license_030",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for failing to remain at the scene of a collision?",
+    options: ["4 points", "6 points", "7 points", "9 points"],
+    correctAnswer: 2,
+    explanation: "Failing to remain at the scene of a collision results in 7 demerit points, the highest number of points for any single offence."
+  },
+  {
+    id: "license_031",
+    category: CATEGORIES.LICENSE,
+    question: "Within how many days must you notify MTO of a change of address?",
+    options: ["3 days", "6 days", "10 days", "30 days"],
+    correctAnswer: 1,
+    explanation: "You must tell the Ministry of Transportation within 6 days of changing your name or address."
+  },
+  {
+    id: "license_032",
+    category: CATEGORIES.LICENSE,
+    question: "How often must drivers aged 80 or older renew their licence?",
+    options: ["Every year", "Every 2 years", "Every 3 years", "Every 5 years"],
+    correctAnswer: 1,
+    explanation: "Drivers aged 80 or older must renew their driver's licence every 2 years and undergo additional screening."
+  },
+  {
+    id: "license_033",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for failing to stop for police?",
+    options: ["4 points", "6 points", "7 points", "9 points"],
+    correctAnswer: 2,
+    explanation: "Failing to stop for police results in 7 demerit points, equal to failing to remain at a collision scene."
+  },
+  {
+    id: "license_034",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for following too closely?",
+    options: ["2 points", "3 points", "4 points", "6 points"],
+    correctAnswer: 2,
+    explanation: "Following too closely (tailgating) results in 4 demerit points."
+  },
+  {
+    id: "license_035",
+    category: CATEGORIES.LICENSE,
+    question: "How many demerit points for using a hand-held device while driving?",
+    options: ["2 points", "3 points", "4 points", "6 points"],
+    correctAnswer: 1,
+    explanation: "Using a hand-held wireless device while driving results in 3 demerit points plus substantial fines."
+  },
+  
+  // ========== ADDITIONAL SAFETY QUESTIONS ==========
+  {
+    id: "safety_051",
+    category: CATEGORIES.SAFETY,
+    question: "To get your vehicle out of a skid, you should first:",
+    options: ["Steer straight ahead", "Steer opposite to the skid", "Steer in the direction you want to go", "Apply brakes hard"],
+    correctAnswer: 2,
+    explanation: "To get out of a skid, steer in the direction you want to go. This helps regain control of the vehicle."
+  },
+  {
+    id: "safety_052",
+    category: CATEGORIES.SAFETY,
+    question: "When the driver of another vehicle is about to overtake you, you must:",
+    options: ["Speed up", "Move left to prevent passing", "Signal them not to pass", "Move to the right and let them pass"],
+    correctAnswer: 3,
+    explanation: "When being overtaken, you must move to the right and allow the vehicle to pass safely."
+  },
+  {
+    id: "safety_053",
+    category: CATEGORIES.SAFETY,
+    question: "What is the proper braking technique?",
+    options: ["Pump the brakes rapidly", "Press brake pedal firmly and evenly", "Use left foot for braking", "Apply brakes hard suddenly"],
+    correctAnswer: 1,
+    explanation: "Press the brake pedal firmly and evenly. Use your right foot for both brake and gas pedals."
+  },
+  {
+    id: "safety_054",
+    category: CATEGORIES.SAFETY,
+    question: "In manual transmission, what should you do going down a long steep hill?",
+    options: ["Stay in highest gear", "Shift into lower gear", "Coast in neutral", "Only use brakes"],
+    correctAnswer: 1,
+    explanation: "Shift into a lower gear going down long, steep hills. This helps control speed and reduces brake wear."
+  },
+  {
+    id: "safety_055",
+    category: CATEGORIES.SAFETY,
+    question: "When should you downshift before going downhill?",
+    options: ["After you start going downhill", "Before starting downhill", "In the middle of the hill", "At the bottom"],
+    correctAnswer: 1,
+    explanation: "Downshift before starting downhill since it may not be possible once you are going downhill."
+  },
+  {
+    id: "safety_056",
+    category: CATEGORIES.SAFETY,
+    question: "Which pedal should you use for both braking and acceleration?",
+    options: ["Left foot", "Right foot", "Either foot", "Both feet"],
+    correctAnswer: 1,
+    explanation: "Use your right foot for both brake and gas pedals so you won't step on both pedals at the same time."
+  },
+  {
+    id: "safety_057",
+    category: CATEGORIES.SAFETY,
+    question: "What does being a predictable driver mean?",
+    options: ["Driving slowly", "Doing what others expect", "Honking often", "Changing lanes frequently"],
+    correctAnswer: 1,
+    explanation: "Being predictable means doing what other road users expect you to do, helping traffic move safely."
+  },
+  {
+    id: "safety_058",
+    category: CATEGORIES.SAFETY,
+    question: "What does courteous driving include?",
+    options: ["Cutting off other drivers", "Giving space for lane changes", "Not signalling", "Speeding up to block merges"],
+    correctAnswer: 1,
+    explanation: "Courteous driving means giving other drivers space to change lanes, not cutting them off, and signalling properly."
+  },
+  {
+    id: "safety_059",
+    category: CATEGORIES.SAFETY,
+    question: "Can you be found responsible for a collision even if someone else broke the law?",
+    options: ["No, never", "Yes, if you could have avoided it", "Only if you also broke a law", "Only with witnesses"],
+    correctAnswer: 1,
+    explanation: "Even if someone else does something wrong, you may be found responsible if you could have done something to avoid the collision."
+  },
+  {
+    id: "safety_060",
+    category: CATEGORIES.SAFETY,
+    question: "What is the major cause of collisions?",
+    options: ["Vehicle defects", "Weather", "Breaking traffic laws", "Road conditions"],
+    correctAnswer: 2,
+    explanation: "Breaking the rules of the road is the major cause of collisions. Knowing and following traffic laws is essential."
+  },
+  
+  // ========== ADDITIONAL MISCELLANEOUS QUESTIONS ==========
+  {
+    id: "misc_011",
+    category: CATEGORIES.MISC,
+    question: "How many demerit points for driver failing to wear a seatbelt?",
+    options: ["1 point", "2 points", "3 points", "4 points"],
+    correctAnswer: 1,
+    explanation: "A driver failing to wear a seatbelt receives 2 demerit points. It's the law to wear seatbelts in Ontario."
+  },
+  {
+    id: "misc_012",
+    category: CATEGORIES.MISC,
+    question: "How many demerit points for improper opening of a vehicle door?",
+    options: ["1 point", "2 points", "3 points", "4 points"],
+    correctAnswer: 2,
+    explanation: "Improper opening of a vehicle door (dooring) results in 3 demerit points and can cause serious injury to cyclists."
+  },
+  {
+    id: "misc_013",
+    category: CATEGORIES.MISC,
+    question: "Is it illegal to drive with a radar detector in Ontario?",
+    options: ["Yes, 3 demerit points", "No, it's legal", "Only on highways", "Only for G1 drivers"],
+    correctAnswer: 0,
+    explanation: "Driving a vehicle equipped with a radar detector results in 3 demerit points. They are illegal in Ontario."
+  },
+  {
+    id: "misc_014",
+    category: CATEGORIES.MISC,
+    question: "What are High Occupancy Vehicle (HOV) lanes for?",
+    options: ["Emergency vehicles only", "Vehicles with multiple occupants", "Commercial trucks", "Motorcycles only"],
+    correctAnswer: 1,
+    explanation: "HOV lanes are reserved for vehicles with a minimum number of passengers. Improper use results in 3 demerit points."
+  },
+  {
+    id: "misc_015",
+    category: CATEGORIES.MISC,
+    question: "How many demerit points for driving the wrong way on a one-way road?",
+    options: ["2 points", "3 points", "4 points", "6 points"],
+    correctAnswer: 1,
+    explanation: "Going the wrong way on a one-way road results in 3 demerit points and is extremely dangerous."
+  },
 ];
 
 export const getTotalQuestions = () => questions.length;
