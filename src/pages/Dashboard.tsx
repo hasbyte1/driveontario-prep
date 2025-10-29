@@ -45,16 +45,16 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pb-20">
       <InstallPrompt />
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary to-secondary p-6 text-primary-foreground">
+      <div className="bg-gradient-to-br from-primary to-secondary p-4 sm:p-6 text-primary-foreground">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-2">Ontario DrivePrep</h1>
-          <p className="text-primary-foreground/80">Master your G1 knowledge test</p>
+          <h1 className="text-2xl sm:text-3xl font-bold mb-1 sm:mb-2">Ontario DrivePrep</h1>
+          <p className="text-sm sm:text-base text-primary-foreground/80">Master your G1 knowledge test</p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 -mt-4">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 -mt-4">
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 gap-3 mb-6 animate-slide-up">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-4 sm:mb-6 animate-slide-up">
           <StatCard
             icon={<CheckCircle className="w-5 h-5" />}
             label="Completed"
@@ -85,12 +85,12 @@ const Dashboard = () => {
         </div>
 
         {/* Overall Progress */}
-        <Card className="mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-          <CardHeader>
-            <CardTitle>Overall Progress</CardTitle>
-            <CardDescription>Keep practicing to master all topics</CardDescription>
+        <Card className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Overall Progress</CardTitle>
+            <CardDescription className="text-sm">Keep practicing to master all topics</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6">
             <ProgressBar 
               current={progress.questionsCompleted} 
               total={totalQuestions}
@@ -101,24 +101,24 @@ const Dashboard = () => {
 
         {/* Recent Test Result */}
         {recentTest && (
-          <Card className="mb-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
+          <Card className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
                 Last Test Result
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3">
                 <div>
-                  <p className="text-3xl font-bold">
+                  <p className="text-2xl sm:text-3xl font-bold">
                     {recentTest.score}/{recentTest.totalQuestions}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {Math.round((recentTest.score / recentTest.totalQuestions) * 100)}% correct
                   </p>
                 </div>
-                <div className={`px-4 py-2 rounded-full font-semibold ${
+                <div className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-semibold ${
                   recentTest.passed 
                     ? "bg-success/10 text-success" 
                     : "bg-destructive/10 text-destructive"
@@ -134,14 +134,14 @@ const Dashboard = () => {
         )}
 
         {/* Daily Tip */}
-        <Card className="mb-6 bg-gradient-to-br from-accent/5 to-transparent border-accent/20 animate-slide-up" style={{ animationDelay: "0.3s" }}>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
+        <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-accent/5 to-transparent border-accent/20 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg flex items-center gap-2">
               💡 Daily Tip
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-sm">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <p className="text-xs sm:text-sm">
               Always check your blind spots before changing lanes. Mirrors alone don't show the full picture. 
               A quick shoulder check can prevent accidents.
             </p>
@@ -149,35 +149,35 @@ const Dashboard = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="space-y-3 animate-slide-up" style={{ animationDelay: "0.4s" }}>
+        <div className="space-y-2 sm:space-y-3 animate-slide-up" style={{ animationDelay: "0.4s" }}>
           <Button 
-            className="w-full h-14 text-lg gap-2" 
+            className="w-full h-12 sm:h-14 text-base sm:text-lg gap-2" 
             size="lg"
             onClick={() => navigate("/practice-selection")}
           >
-            <Brain className="w-5 h-5" />
+            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
             Start Practice Test
-            <ArrowRight className="w-5 h-5 ml-auto" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
           </Button>
           
           <Button 
             variant="outline" 
-            className="w-full h-14 text-lg gap-2"
+            className="w-full h-12 sm:h-14 text-base sm:text-lg gap-2"
             onClick={() => navigate("/flashcards")}
           >
-            <BookOpen className="w-5 h-5" />
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
             Study Flashcards
-            <ArrowRight className="w-5 h-5 ml-auto" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
           </Button>
           
           <Button 
             variant="outline" 
-            className="w-full h-14 text-lg gap-2"
+            className="w-full h-12 sm:h-14 text-base sm:text-lg gap-2"
             onClick={() => navigate("/progress")}
           >
-            <Trophy className="w-5 h-5" />
+            <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
             View Progress
-            <ArrowRight className="w-5 h-5 ml-auto" />
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
           </Button>
         </div>
       </div>

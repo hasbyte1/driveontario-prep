@@ -30,10 +30,10 @@ export const StatCard = ({
       variantStyles[variant],
       className
     )}>
-      <CardContent className="p-4">
-        <div className="flex items-start gap-3">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
           <div className={cn(
-            "flex-shrink-0 rounded-lg p-2",
+            "flex-shrink-0 rounded-lg p-1.5 sm:p-2",
             variant === "primary" && "bg-primary/10 text-primary",
             variant === "success" && "bg-success/10 text-success",
             variant === "default" && "bg-muted text-foreground"
@@ -41,10 +41,10 @@ export const StatCard = ({
             {icon}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold mt-1">{value}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">{label}</p>
+            <p className="text-xl sm:text-2xl font-bold mt-0.5 sm:mt-1">{value}</p>
             {sublabel && (
-              <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">{sublabel}</p>
             )}
           </div>
         </div>

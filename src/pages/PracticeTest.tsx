@@ -149,44 +149,45 @@ const PracticeTest = () => {
     <div className="min-h-screen bg-background pb-6">
       {/* Header */}
       <div className="bg-card border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-3">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               <Button 
                 variant="ghost" 
                 size="sm"
                 onClick={() => navigate("/practice-selection")}
+                className="h-8 w-8 sm:h-9 sm:w-9 p-0"
               >
-                <Home className="w-4 h-4" />
+                <Home className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
-              <span className="text-sm font-medium">
-                Question {currentIndex + 1} of {questions.length}
+              <span className="text-xs sm:text-sm font-medium">
+                Q {currentIndex + 1}/{questions.length}
               </span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <RotateCcw className="w-4 h-4" />
+                  <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0">
+                    <RotateCcw className="w-3 h-3 sm:w-4 sm:h-4" />
                   </Button>
                 </AlertDialogTrigger>
-                <AlertDialogContent>
+                <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Reset Test?</AlertDialogTitle>
-                    <AlertDialogDescription>
+                    <AlertDialogTitle className="text-lg sm:text-xl">Reset Test?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-sm">
                       This will clear all your answers and restart the test. This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                    <AlertDialogCancel className="m-0">Cancel</AlertDialogCancel>
                     <AlertDialogAction onClick={handleReset}>
                       Reset Test
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <div className="flex items-center gap-2 text-sm">
-                <Clock className="w-4 h-4" />
+              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span className={timeLeft < 300 ? "text-destructive font-bold" : "font-medium"}>
                   {minutes}:{seconds.toString().padStart(2, "0")}
                 </span>
@@ -194,17 +195,17 @@ const PracticeTest = () => {
             </div>
           </div>
           {category && (
-            <div className="text-xs text-muted-foreground mb-2">
+            <div className="text-[10px] sm:text-xs text-muted-foreground mb-2">
               Category: {category}
             </div>
           )}
-          <Progress value={((currentIndex + 1) / questions.length) * 100} />
+          <Progress value={((currentIndex + 1) / questions.length) * 100} className="h-1.5 sm:h-2" />
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             {/* Question */}
             <div className="mb-6">
               <div className="text-xs text-muted-foreground mb-2">
@@ -226,7 +227,7 @@ const PracticeTest = () => {
 
             {/* Options */}
             <RadioGroup value={selectedAnswer?.toString()} onValueChange={(val) => handleAnswerSelect(parseInt(val))}>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {currentQuestion.options.map((option, idx) => {
                   const isSelected = selectedAnswer === idx;
                   const isCorrect = idx === currentQuestion.correctAnswer;
@@ -236,7 +237,7 @@ const PracticeTest = () => {
                   return (
                     <div
                       key={idx}
-                      className={`flex items-center space-x-3 p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                      className={`flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer ${
                         showCorrect ? "border-success bg-success/5" :
                         showIncorrect ? "border-destructive bg-destructive/5" :
                         isSelected ? "border-primary bg-primary/5" :
@@ -244,15 +245,15 @@ const PracticeTest = () => {
                       }`}
                       onClick={() => handleAnswerSelect(idx)}
                     >
-                      <RadioGroupItem value={idx.toString()} id={`option-${idx}`} disabled={showExplanation} />
+                      <RadioGroupItem value={idx.toString()} id={`option-${idx}`} disabled={showExplanation} className="shrink-0" />
                       <Label 
                         htmlFor={`option-${idx}`}
-                        className="flex-1 cursor-pointer font-normal"
+                        className="flex-1 cursor-pointer font-normal text-sm sm:text-base"
                       >
                         {option}
                       </Label>
-                      {showCorrect && <CheckCircle className="w-5 h-5 text-success flex-shrink-0" />}
-                      {showIncorrect && <XCircle className="w-5 h-5 text-destructive flex-shrink-0" />}
+                      {showCorrect && <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-success flex-shrink-0" />}
+                      {showIncorrect && <XCircle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive flex-shrink-0" />}
                     </div>
                   );
                 })}
@@ -261,32 +262,33 @@ const PracticeTest = () => {
 
             {/* Explanation */}
             {showExplanation && (
-              <div className="mt-6 p-4 rounded-lg bg-muted animate-slide-up">
-                <h3 className="font-semibold mb-2">Explanation</h3>
-                <p className="text-sm text-muted-foreground">
+              <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-muted animate-slide-up">
+                <h3 className="font-semibold mb-2 text-sm sm:text-base">Explanation</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground">
                   {currentQuestion.explanation}
                 </p>
               </div>
             )}
 
             {/* Actions */}
-            <div className="mt-6 flex gap-3">
+            <div className="mt-4 sm:mt-6 flex gap-2 sm:gap-3">
               {!showExplanation ? (
                 <>
                   <Button 
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
+                    className="h-10 sm:h-11 text-sm sm:text-base"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Back
                   </Button>
                   <Button 
-                    className="flex-1" 
+                    className="flex-1 h-10 sm:h-11 text-sm sm:text-base" 
                     onClick={handleSubmitAnswer}
                     disabled={selectedAnswer === null}
                   >
-                    Submit Answer
+                    Submit
                   </Button>
                 </>
               ) : (
@@ -295,18 +297,19 @@ const PracticeTest = () => {
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
+                    className="h-10 sm:h-11 text-sm sm:text-base"
                   >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Back
                   </Button>
                   <Button 
-                    className="flex-1 gap-2" 
+                    className="flex-1 gap-2 h-10 sm:h-11 text-sm sm:text-base" 
                     onClick={handleNext}
                   >
                     {currentIndex < questions.length - 1 ? (
-                      <>Next Question <ArrowRight className="w-4 h-4" /></>
+                      <>Next <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" /></>
                     ) : (
-                      "Finish Test"
+                      "Finish"
                     )}
                   </Button>
                 </>
@@ -316,8 +319,8 @@ const PracticeTest = () => {
         </Card>
 
         {/* Score Preview */}
-        <div className="mt-4 text-center text-sm text-muted-foreground">
-          Current: {answers.filter((a, i) => a === questions[i]?.correctAnswer).length} correct • 
+        <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
+          {answers.filter((a, i) => a === questions[i]?.correctAnswer).length} correct • 
           {" "}{answers.filter(a => a !== null).length} answered
         </div>
       </div>

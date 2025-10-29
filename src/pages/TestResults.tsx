@@ -19,19 +19,19 @@ const TestResults = () => {
   const passed = testResult.passed;
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-2xl mx-auto py-8">
+    <div className="min-h-screen bg-background p-3 sm:p-4">
+      <div className="max-w-2xl mx-auto py-4 sm:py-8">
         {/* Result Header */}
-        <div className="text-center mb-8 animate-scale-in">
-          <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full mb-4 ${
+        <div className="text-center mb-6 sm:mb-8 animate-scale-in">
+          <div className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-3 sm:mb-4 ${
             passed ? "bg-success/10" : "bg-warning/10"
           }`}>
-            <Trophy className={`w-10 h-10 ${passed ? "text-success" : "text-warning"}`} />
+            <Trophy className={`w-8 h-8 sm:w-10 sm:h-10 ${passed ? "text-success" : "text-warning"}`} />
           </div>
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">
             {passed ? "Congratulations! 🎉" : "Keep Practicing!"}
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {passed 
               ? "You passed the practice test!" 
               : "You need 80% (32/40) to pass the G1 test"}
@@ -39,16 +39,16 @@ const TestResults = () => {
         </div>
 
         {/* Score Card */}
-        <Card className="mb-6 animate-slide-up">
-          <CardHeader>
-            <CardTitle>Your Score</CardTitle>
+        <Card className="mb-4 sm:mb-6 animate-slide-up">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-lg sm:text-xl">Your Score</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-center mb-6">
-              <div className="text-6xl font-bold mb-2">
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="text-center mb-4 sm:mb-6">
+              <div className="text-4xl sm:text-6xl font-bold mb-2">
                 {testResult.score}/{testResult.totalQuestions}
               </div>
-              <div className="text-2xl text-muted-foreground">
+              <div className="text-xl sm:text-2xl text-muted-foreground">
                 {percentage}% correct
               </div>
             </div>
@@ -58,26 +58,26 @@ const TestResults = () => {
               variant={passed ? "success" : "warning"}
               showLabel={false}
             />
-            <div className="mt-4 text-sm text-center text-muted-foreground">
+            <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-center text-muted-foreground">
               Time: {Math.floor(testResult.timeSpent / 60)}:{(testResult.timeSpent % 60).toString().padStart(2, "0")}
             </div>
           </CardContent>
         </Card>
 
         {/* Category Breakdown */}
-        <Card className="mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
+        <Card className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               Category Breakdown
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 p-4 sm:p-6 pt-0">
             {Object.entries(testResult.categoryBreakdown).map(([category, stats]) => {
               const categoryPercent = Math.round((stats.correct / stats.total) * 100);
               return (
                 <div key={category}>
-                  <div className="flex justify-between text-sm mb-2">
+                  <div className="flex justify-between text-xs sm:text-sm mb-2">
                     <span className="font-medium">{category}</span>
                     <span className="text-muted-foreground">
                       {stats.correct}/{stats.total} ({categoryPercent}%)
@@ -96,12 +96,12 @@ const TestResults = () => {
         </Card>
 
         {/* Feedback */}
-        <Card className="mb-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/20 animate-slide-up" style={{ animationDelay: "0.2s" }}>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-2">
+        <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/20 animate-slide-up" style={{ animationDelay: "0.2s" }}>
+          <CardContent className="p-4 sm:p-6">
+            <h3 className="font-semibold mb-2 text-sm sm:text-base">
               {passed ? "You're ready for the real test!" : "Areas to improve:"}
             </h3>
-            <ul className="text-sm space-y-1 text-muted-foreground">
+            <ul className="text-xs sm:text-sm space-y-1 text-muted-foreground">
               {!passed && (
                 Object.entries(testResult.categoryBreakdown)
                   .filter(([_, stats]) => (stats.correct / stats.total) < 0.8)
@@ -121,20 +121,20 @@ const TestResults = () => {
         </Card>
 
         {/* Actions */}
-        <div className="space-y-3 animate-slide-up" style={{ animationDelay: "0.3s" }}>
+        <div className="space-y-2 sm:space-y-3 animate-slide-up" style={{ animationDelay: "0.3s" }}>
           <Button 
-            className="w-full h-12 gap-2" 
+            className="w-full h-11 sm:h-12 gap-2 text-sm sm:text-base" 
             onClick={() => navigate("/practice")}
           >
-            <RotateCcw className="w-5 h-5" />
+            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
             Take Another Test
           </Button>
           <Button 
             variant="outline" 
-            className="w-full h-12 gap-2"
+            className="w-full h-11 sm:h-12 gap-2 text-sm sm:text-base"
             onClick={() => navigate("/")}
           >
-            <Home className="w-5 h-5" />
+            <Home className="w-4 h-4 sm:w-5 sm:h-5" />
             Back to Dashboard
           </Button>
         </div>
