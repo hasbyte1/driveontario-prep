@@ -273,6 +273,16 @@ const Dashboard = () => {
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
             </Button>
           </div>
+
+          <Button 
+            variant="outline" 
+            className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2 border-primary/30 hover:bg-primary/5"
+            onClick={() => navigate("/handbook")}
+          >
+            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+            Driver's Handbook Reference
+            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
+          </Button>
         </div>
       </div>
     </div>
