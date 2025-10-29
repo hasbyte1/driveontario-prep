@@ -13,8 +13,12 @@ import {
   Shield, 
   Wine, 
   FileText, 
-  MoreHorizontal 
+  MoreHorizontal,
+  Timer,
+  Sparkles,
+  CheckCircle
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
@@ -104,7 +108,10 @@ const PracticeSelection = () => {
                 <Play className="w-8 h-8 text-primary" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold mb-1">Full G1 Simulation</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-xl font-bold">Full G1 Simulation</h3>
+                  <Timer className="w-5 h-5 text-primary" />
+                </div>
                 <p className="text-sm text-muted-foreground mb-3">
                   40 random questions, 45-minute timer, 80% pass required
                 </p>
@@ -128,6 +135,11 @@ const PracticeSelection = () => {
             const percentage = categoryStats.total > 0 
               ? Math.round((categoryStats.correct / categoryStats.total) * 100) 
               : 0;
+            
+            // Determine category status
+            const isNew = categoryStats.total === 0;
+            const isMastered = percentage >= 80 && categoryStats.total >= 10;
+            const needsPractice = categoryStats.total > 0 && percentage < 60;
 
             return (
               <Card 
@@ -144,7 +156,26 @@ const PracticeSelection = () => {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-bold mb-1">{category}</h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold">{category}</h3>
+                        {isNew && (
+                          <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            New
+                          </Badge>
+                        )}
+                        {isMastered && (
+                          <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                            <CheckCircle className="w-3 h-3 mr-1" />
+                            Mastered
+                          </Badge>
+                        )}
+                        {needsPractice && (
+                          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/20">
+                            Suggested
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground mb-3">
                         {info.description}
                       </p>
@@ -153,12 +184,12 @@ const PracticeSelection = () => {
                       </p>
 
                       {/* Progress */}
-                      {categoryStats.total > 0 && (
+                      {categoryStats.total > 0 ? (
                         <div className="mb-3">
                           <div className="flex justify-between text-xs mb-1">
                             <span className="text-muted-foreground">Your Progress</span>
                             <span className="font-semibold">
-                              {categoryStats.correct}/{categoryStats.total} ({percentage}%)
+                              {percentage}% mastered
                             </span>
                           </div>
                           <ProgressBar 
@@ -167,6 +198,15 @@ const PracticeSelection = () => {
                             variant={percentage >= 80 ? "success" : percentage >= 60 ? "primary" : "warning"}
                             showLabel={false}
                           />
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {categoryStats.correct} correct out of {categoryStats.total} attempted
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="mb-3 p-3 bg-muted/50 rounded-md">
+                          <p className="text-xs text-muted-foreground">
+                            No questions attempted yet. Start practicing to track your progress!
+                          </p>
                         </div>
                       )}
 
