@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { getRandomQuestions, CATEGORIES } from "@/data/questions";
 import { getStoredProgress, saveProgress, type TestResult } from "@/utils/storage";
-import { ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Home } from "lucide-react";
+import { ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Home, SkipForward, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
 const PracticeTest = () => {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ const PracticeTest = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [answers, setAnswers] = useState<(number | null)[]>(Array(40).fill(null));
+  const [skippedQuestions, setSkippedQuestions] = useState<Set<number>>(new Set());
   const [startTime] = useState(Date.now());
   const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 minutes in seconds
 
@@ -76,6 +79,18 @@ const PracticeTest = () => {
     }
   };
 
+  const handleSkip = () => {
+    setSkippedQuestions(prev => new Set(prev).add(currentIndex));
+    toast.info("Question marked for review");
+    handleNext();
+  };
+
+  const jumpToQuestion = (index: number) => {
+    setCurrentIndex(index);
+    setSelectedAnswer(answers[index]);
+    setShowExplanation(answers[index] !== null);
+  };
+
   const handlePrevious = () => {
     if (currentIndex > 0) {
       setCurrentIndex(currentIndex - 1);
@@ -89,6 +104,7 @@ const PracticeTest = () => {
     setSelectedAnswer(null);
     setShowExplanation(false);
     setAnswers(Array(40).fill(null));
+    setSkippedQuestions(new Set());
     setTimeLeft(45 * 60);
     toast.success("Test reset successfully");
   };
@@ -145,6 +161,11 @@ const PracticeTest = () => {
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 
+  const getQuestionStatus = (index: number) => {
+    if (answers[index] === null) return skippedQuestions.has(index) ? "skipped" : "unanswered";
+    return answers[index] === questions[index].correctAnswer ? "correct" : "incorrect";
+  };
+
   return (
     <div className="min-h-screen bg-background pb-6">
       {/* Header */}
@@ -165,6 +186,61 @@ const PracticeTest = () => {
               </span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 px-2 sm:h-9 sm:px-3">
+                    <Eye className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="text-xs sm:text-sm">Review</span>
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+                  <SheetHeader>
+                    <SheetTitle>Question Overview</SheetTitle>
+                    <SheetDescription>
+                      Click on any question to jump to it
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6 grid grid-cols-5 gap-2">
+                    {questions.map((_, idx) => {
+                      const status = getQuestionStatus(idx);
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => jumpToQuestion(idx)}
+                          className={cn(
+                            "h-10 w-full rounded-md flex items-center justify-center text-xs font-medium transition-all",
+                            currentIndex === idx && "ring-2 ring-primary ring-offset-2",
+                            status === "correct" && "bg-success/20 text-success hover:bg-success/30",
+                            status === "incorrect" && "bg-destructive/20 text-destructive hover:bg-destructive/30",
+                            status === "skipped" && "bg-amber-500/20 text-amber-600 hover:bg-amber-500/30",
+                            status === "unanswered" && "bg-muted text-muted-foreground hover:bg-muted/80"
+                          )}
+                        >
+                          {idx + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-6 space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded bg-success/20" />
+                      <span>Correct</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded bg-destructive/20" />
+                      <span>Incorrect</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded bg-amber-500/20" />
+                      <span>Skipped</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 rounded bg-muted" />
+                      <span>Unanswered</span>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 sm:h-9 sm:w-9 p-0">
@@ -193,6 +269,28 @@ const PracticeTest = () => {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Progress Dots */}
+          <div className="mb-2 flex gap-1 overflow-x-auto py-1 scrollbar-hide">
+            {questions.map((_, idx) => {
+              const status = getQuestionStatus(idx);
+              return (
+                <button
+                  key={idx}
+                  onClick={() => jumpToQuestion(idx)}
+                  className={cn(
+                    "h-2 rounded-full transition-all flex-shrink-0",
+                    currentIndex === idx ? "w-8" : "w-2",
+                    status === "correct" && "bg-success",
+                    status === "incorrect" && "bg-destructive",
+                    status === "skipped" && "bg-amber-500",
+                    status === "unanswered" && "bg-muted-foreground/30"
+                  )}
+                  title={`Question ${idx + 1}`}
+                />
+              );
+            })}
           </div>
           {category && (
             <div className="text-[10px] sm:text-xs text-muted-foreground mb-2">
@@ -282,6 +380,14 @@ const PracticeTest = () => {
                   >
                     <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Back
+                  </Button>
+                  <Button 
+                    variant="secondary"
+                    onClick={handleSkip}
+                    className="h-10 sm:h-11 text-sm sm:text-base"
+                  >
+                    <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
+                    Skip
                   </Button>
                   <Button 
                     className="flex-1 h-10 sm:h-11 text-sm sm:text-base" 
