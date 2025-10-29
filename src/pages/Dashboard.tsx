@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/StatCard";
 import { ProgressBar } from "@/components/ProgressBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { Progress } from "@/components/ui/progress";
 import { getStoredProgress, updateStreak, saveProgress, checkAndAwardBadges, getBadgeInfo } from "@/utils/storage";
 import { getTotalQuestions } from "@/data/questions";
-import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award } from "lucide-react";
+import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award, Lock, Target } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
@@ -41,6 +42,44 @@ const Dashboard = () => {
 
   const recentTest = progress.testHistory[0];
 
+  // Calculate next badge progress
+  const getNextBadge = () => {
+    const allBadges = [
+      { 
+        id: "road_scholar", 
+        ...getBadgeInfo("road_scholar"), 
+        progress: progress.questionsCompleted,
+        target: 100,
+        unlocked: progress.badges.includes("road_scholar")
+      },
+      { 
+        id: "consistent", 
+        ...getBadgeInfo("consistent"), 
+        progress: progress.streak,
+        target: 7,
+        unlocked: progress.badges.includes("consistent")
+      },
+      { 
+        id: "sign_master", 
+        ...getBadgeInfo("sign_master"), 
+        progress: progress.categoryProgress["Road Signs & Signals"]?.correct || 0,
+        target: 20,
+        unlocked: progress.badges.includes("sign_master")
+      },
+      { 
+        id: "perfect_score", 
+        ...getBadgeInfo("perfect_score"), 
+        progress: progress.testHistory.some(t => t.score === t.totalQuestions) ? 1 : 0,
+        target: 1,
+        unlocked: progress.badges.includes("perfect_score")
+      }
+    ];
+    
+    return allBadges.filter(b => !b.unlocked).slice(0, 3);
+  };
+
+  const nextBadges = getNextBadge();
+
   return (
     <div className="min-h-screen bg-background pb-20">
       <InstallPrompt />
@@ -70,10 +109,18 @@ const Dashboard = () => {
             variant={accuracy >= 80 ? "success" : "default"}
           />
           <StatCard
-            icon={<Flame className="w-5 h-5" />}
+            icon={
+              <div className="relative">
+                <Flame className={`w-5 h-5 ${progress.streak >= 7 ? "animate-pulse" : ""}`} />
+                {progress.streak >= 7 && (
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary rounded-full animate-ping" />
+                )}
+              </div>
+            }
             label="Streak"
-            value={`${progress.streak} days`}
-            variant={progress.streak >= 3 ? "primary" : "default"}
+            value={`${progress.streak} ${progress.streak >= 7 ? "🔥" : ""}`}
+            sublabel={progress.streak >= 7 ? "On fire!" : progress.streak > 0 ? "Keep going!" : "Start today"}
+            variant={progress.streak >= 7 ? "success" : progress.streak >= 3 ? "primary" : "default"}
           />
           <StatCard
             icon={<Award className="w-5 h-5" />}
@@ -87,8 +134,13 @@ const Dashboard = () => {
         {/* Overall Progress */}
         <Card className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
           <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="text-lg sm:text-xl">Overall Progress</CardTitle>
-            <CardDescription className="text-sm">Keep practicing to master all topics</CardDescription>
+            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <Target className="w-5 h-5" />
+              Overall Progress
+            </CardTitle>
+            <CardDescription className="text-sm">
+              {progress.questionsCompleted} of {totalQuestions} questions mastered
+            </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6">
             <ProgressBar 
@@ -96,8 +148,48 @@ const Dashboard = () => {
               total={totalQuestions}
               variant={progress.questionsCompleted >= totalQuestions * 0.8 ? "success" : "primary"}
             />
+            <div className="mt-4 flex items-center justify-between text-xs sm:text-sm text-muted-foreground">
+              <span>{Math.round((progress.questionsCompleted / totalQuestions) * 100)}% Complete</span>
+              <span>{totalQuestions - progress.questionsCompleted} remaining</span>
+            </div>
           </CardContent>
         </Card>
+
+        {/* Badges Section */}
+        {nextBadges.length > 0 && (
+          <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/20 animate-slide-up" style={{ animationDelay: "0.15s" }}>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                <Award className="w-5 h-5 text-primary" />
+                Next Badges to Unlock
+              </CardTitle>
+              <CardDescription className="text-sm">Keep practicing to earn these achievements</CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 space-y-3">
+              {nextBadges.map((badge) => (
+                <div key={badge.id} className="flex items-center gap-3 p-3 rounded-lg bg-background/50 border border-border/50">
+                  <div className="text-2xl sm:text-3xl opacity-50">{badge.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="text-sm font-semibold">{badge.name}</p>
+                      <Lock className="w-3 h-3 text-muted-foreground" />
+                    </div>
+                    <p className="text-xs text-muted-foreground mb-2">{badge.description}</p>
+                    <div className="flex items-center gap-2">
+                      <Progress 
+                        value={(badge.progress / badge.target) * 100} 
+                        className="h-2 flex-1"
+                      />
+                      <span className="text-xs font-medium whitespace-nowrap">
+                        {badge.progress}/{badge.target}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Test Result */}
         {recentTest && (
@@ -137,7 +229,7 @@ const Dashboard = () => {
         <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-accent/5 to-transparent border-accent/20 animate-slide-up" style={{ animationDelay: "0.3s" }}>
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-              💡 Daily Tip
+              💡 Daily Driving Tip
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
@@ -149,36 +241,38 @@ const Dashboard = () => {
         </Card>
 
         {/* Action Buttons */}
-        <div className="space-y-2 sm:space-y-3 animate-slide-up" style={{ animationDelay: "0.4s" }}>
+        <div className="space-y-3 sm:space-y-4 animate-slide-up" style={{ animationDelay: "0.4s" }}>
           <Button 
-            className="w-full h-12 sm:h-14 text-base sm:text-lg gap-2" 
+            className="w-full h-14 sm:h-16 text-base sm:text-lg gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all" 
             size="lg"
             onClick={() => navigate("/practice-selection")}
           >
-            <Brain className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Brain className="w-5 h-5 sm:w-6 sm:h-6" />
             Start Practice Test
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
+            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-auto" />
           </Button>
           
-          <Button 
-            variant="outline" 
-            className="w-full h-12 sm:h-14 text-base sm:text-lg gap-2"
-            onClick={() => navigate("/flashcards")}
-          >
-            <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
-            Study Flashcards
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full h-12 sm:h-14 text-base sm:text-lg gap-2"
-            onClick={() => navigate("/progress")}
-          >
-            <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
-            View Progress
-            <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
-          </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+            <Button 
+              variant="outline" 
+              className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2"
+              onClick={() => navigate("/flashcards")}
+            >
+              <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
+              Study Flashcards
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2"
+              onClick={() => navigate("/progress")}
+            >
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+              View Detailed Progress
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
