@@ -262,9 +262,12 @@ const PracticeTest = () => {
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
-                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className={timeLeft < 300 ? "text-destructive font-bold" : "font-medium"}>
+              <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-md bg-muted/50">
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className={cn(
+                  "font-mono font-semibold tabular-nums",
+                  timeLeft < 300 && "text-destructive"
+                )}>
                   {minutes}:{seconds.toString().padStart(2, "0")}
                 </span>
               </div>
@@ -425,9 +428,29 @@ const PracticeTest = () => {
         </Card>
 
         {/* Score Preview */}
-        <div className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-muted-foreground">
-          {answers.filter((a, i) => a === questions[i]?.correctAnswer).length} correct • 
-          {" "}{answers.filter(a => a !== null).length} answered
+        <div className="mt-3 sm:mt-4 text-center">
+          <div className="inline-flex items-center gap-3 text-xs sm:text-sm px-4 py-2 rounded-lg bg-muted/50">
+            <span className="font-medium">
+              {answers.filter((a, i) => a === questions[i]?.correctAnswer).length} correct
+            </span>
+            <span className="text-muted-foreground">•</span>
+            <span className="font-medium">
+              {answers.filter(a => a !== null).length} answered
+            </span>
+            {answers.filter(a => a !== null).length > 0 && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <span className={cn(
+                  "font-semibold",
+                  (answers.filter((a, i) => a === questions[i]?.correctAnswer).length / answers.filter(a => a !== null).length) >= 0.8 
+                    ? "text-success" 
+                    : "text-muted-foreground"
+                )}>
+                  {Math.round((answers.filter((a, i) => a === questions[i]?.correctAnswer).length / answers.filter(a => a !== null).length) * 100)}% accuracy
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>
