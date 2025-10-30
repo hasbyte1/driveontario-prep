@@ -131,6 +131,19 @@ const Dashboard = () => {
           />
         </div>
 
+        {/* Start Practice Test - Primary CTA */}
+        <div className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
+          <Button 
+            className="w-full h-14 sm:h-16 text-base sm:text-lg gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all" 
+            size="lg"
+            onClick={() => navigate("/practice-selection")}
+          >
+            <Brain className="w-5 h-5 sm:w-6 sm:h-6" />
+            Start Practice Test
+            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-auto" />
+          </Button>
+        </div>
+
         {/* Overall Progress */}
         <Card className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.1s" }}>
           <CardHeader className="p-4 sm:p-6">
@@ -240,18 +253,8 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Action Buttons */}
+        {/* Secondary Action Buttons */}
         <div className="space-y-3 sm:space-y-4 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-          <Button 
-            className="w-full h-14 sm:h-16 text-base sm:text-lg gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl transition-all" 
-            size="lg"
-            onClick={() => navigate("/practice-selection")}
-          >
-            <Brain className="w-5 h-5 sm:w-6 sm:h-6" />
-            Start Practice Test
-            <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6 ml-auto" />
-          </Button>
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
             <Button 
               variant="outline" 
