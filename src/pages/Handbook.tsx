@@ -1,4 +1,4 @@
-import React, { useState, Children, isValidElement } from "react";
+import React, { useState, Children, isValidElement, type ReactElement, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,41 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
+export const transformChildrenToString = (children: ReactNode | ReactNode[]): string => {
+  if (!Array.isArray(children) && !isValidElement(children)) {
+    return childToString(children);
+  }
+
+  return Children.toArray(children).reduce((text: string, child: ReactNode): string => {
+    let newText = "";
+
+    if (hasChildren(child)) {
+      newText = transformChildrenToString(child.props.children);
+    } else if (isValidElement(child)) {
+      newText = "";
+    } else {
+      newText = childToString(child);
+    }
+
+    return text.concat(newText);
+  }, "");
+};
+
+const childToString = (child?: ReactNode): string => {
+  if (typeof child === "undefined" || child === null || typeof child === "boolean") {
+    return "";
+  }
+
+  if (JSON.stringify(child) === "{}") {
+    return "";
+  }
+
+  return child.toString();
+};
+
+const hasChildren = (element: ReactNode): element is ReactElement<{ children: ReactNode | ReactNode[] }> =>
+  isValidElement<{ children?: ReactNode[] }>(element) && Boolean(element.props.children);
+
 const getTextFromChildren = (text: React.ReactNode) => {
   return typeof text === "number"
     ? String(text)
@@ -36,7 +71,7 @@ const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQ
     return <>{text}</>;
   }
 
-  const txt = getTextFromChildren(text);
+  const txt = transformChildrenToString(text);
   const parts = txt.split(new RegExp(`(${searchQuery})`, "gi"));
 
   return (
