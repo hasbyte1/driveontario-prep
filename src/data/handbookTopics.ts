@@ -2,6 +2,10 @@ export interface HandbookSection {
   name: string;
   content: string;
   keywords: string[];
+  topics?: {
+    title: string;
+    points: string[];
+  }[];
 }
 
 export interface HandbookTopic {
@@ -10,10 +14,6 @@ export interface HandbookTopic {
   icon: string;
   sections: HandbookSection[];
   sectionsDescription?: string;
-  topics?: {
-    title: string;
-    points: string[];
-  }[];
 }
 
 export const handbookTopics: HandbookTopic[] = [
