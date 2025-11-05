@@ -201,25 +201,22 @@ const Handbook = () => {
                               components={{
                                 p: ({ children }) => (
                                   <p>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
+                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
                                   </p>
                                 ),
                                 li: ({ children }) => (
                                   <li>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
+                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
                                   </li>
                                 ),
-                                strong: ({ children }) => {
-                                  console.log({ children });
-                                  return (
-                                    <strong>
-                                      <HighlightedText text={children} searchQuery={searchQuery} />
-                                    </strong>
-                                  );
-                                },
+                                strong: ({ children }) => (
+                                  <strong>
+                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
+                                  </strong>
+                                ),
                                 em: ({ children }) => (
                                   <em>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
+                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
                                   </em>
                                 ),
                               }}
