@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Children, isValidElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,13 +20,23 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
+const getTextFromChildren = (text: React.ReactNode) => {
+  return typeof text === "number"
+    ? String(text)
+    : Array.isArray(text)
+    ? text.join("\n")
+    : React.isValidElement(text)
+    ? Children.map(children, child => getTextFromChildren(child))
+    : String(text);
+};
+
 const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
   console.log({ text });
   if (!searchQuery.trim()) {
     return <>{text}</>;
   }
 
-  const txt = typeof text === "number" ? String(text) : Array.isArray(text) ? text.join("\n") : String(text);
+  const txt = getTextFromChildren(text);
   const parts = txt.split(new RegExp(`(${searchQuery})`, "gi"));
 
   return (
