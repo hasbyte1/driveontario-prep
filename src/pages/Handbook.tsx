@@ -20,7 +20,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
-const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
+const HighlightedText = ({ text, searchQuery }: { text: string; searchQuery: string }) => {
   if (!searchQuery.trim()) {
     return <>{text}</>;
   }
