@@ -1629,10 +1629,18 @@ const Handbook = () => {
                           <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
                             <ReactMarkdown
                               components={{
-                                p: ({ children }) => <p><HighlightedText text={String(children)} searchQuery={searchQuery} /></p>,
-                                li: ({ children }) => <li><HighlightedText text={String(children)} searchQuery={searchQuery} /></li>,
-                                strong: ({ children }) => <strong><HighlightedText text={String(children)} searchQuery={searchQuery} /></strong>,
-                                em: ({ children }) => <em><HighlightedText text={String(children)} searchQuery={searchQuery} /></em>,
+                                p: ({ children }) => {
+                                  const text = typeof children === 'string' ? children : '';
+                                  return <p><HighlightedText text={text} searchQuery={searchQuery} /></p>;
+                                },
+                                li: ({ children }) => {
+                                  const text = typeof children === 'string' ? children : '';
+                                  return <li><HighlightedText text={text} searchQuery={searchQuery} /></li>;
+                                },
+                                strong: ({ children }) => {
+                                  const text = typeof children === 'string' ? children : String(children || '');
+                                  return <strong><HighlightedText text={text} searchQuery={searchQuery} /></strong>;
+                                },
                               }}
                             >
                               {section.content}
