@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ArrowLeft, BookOpen, Search, ExternalLink, FileText, Car, AlertTriangle, Navigation, Users, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import ReactMarkdown from "react-markdown";
 
 interface HandbookSection {
   name: string;
@@ -1603,8 +1604,10 @@ const Handbook = () => {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="text-xs sm:text-sm text-muted-foreground pb-3 pt-1">
-                          <div className="whitespace-pre-line leading-relaxed">
-                            {section.content}
+                          <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+                            <ReactMarkdown>
+                              {section.content}
+                            </ReactMarkdown>
                           </div>
                         </AccordionContent>
                       </AccordionItem>
