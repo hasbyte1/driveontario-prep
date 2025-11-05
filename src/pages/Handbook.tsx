@@ -1,4 +1,4 @@
-import { useState, Children, isValidElement } from "react";
+import React, { useState, Children, isValidElement } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ const getTextFromChildren = (text: React.ReactNode) => {
     ? String(text)
     : Array.isArray(text)
       ? text.join("\n")
-      : React.isValidElement(text)
+      : isValidElement(text)
         ? Children.map(text, (child) => getTextFromChildren(child))
         : String(text);
 };
