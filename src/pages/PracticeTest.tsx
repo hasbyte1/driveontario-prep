@@ -9,7 +9,17 @@ import { getRandomQuestions, CATEGORIES } from "@/data/questions";
 import { getStoredProgress, saveProgress, type TestResult } from "@/utils/storage";
 import { ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Home, SkipForward, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +27,7 @@ const PracticeTest = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category") || undefined;
-  
+
   const [questions] = useState(() => getRandomQuestions(40, category));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -31,7 +41,7 @@ const PracticeTest = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           handleFinishTest();
           return 0;
@@ -60,8 +70,8 @@ const PracticeTest = () => {
     setAnswers(newAnswers);
     setShowExplanation(true);
 
-    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
-    
+    const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
+
     if (isCorrect) {
       toast.success("Correct! 🎉");
     } else {
@@ -80,7 +90,7 @@ const PracticeTest = () => {
   };
 
   const handleSkip = () => {
-    setSkippedQuestions(prev => new Set(prev).add(currentIndex));
+    setSkippedQuestions((prev) => new Set(prev).add(currentIndex));
     toast.info("Question marked for review");
     handleNext();
   };
@@ -110,10 +120,8 @@ const PracticeTest = () => {
   };
 
   const handleFinishTest = () => {
-    const score = answers.reduce((acc, answer, idx) => 
-      answer === questions[idx].correctAnswer ? acc + 1 : acc, 0
-    );
-    
+    const score = answers.reduce((acc, answer, idx) => (answer === questions[idx].correctAnswer ? acc + 1 : acc), 0);
+
     const passed = score >= 32; // 80% pass rate
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
@@ -143,7 +151,7 @@ const PracticeTest = () => {
     progress.questionsCompleted += questions.length;
     progress.questionsCorrect += score;
     progress.testHistory.unshift(testResult);
-    
+
     // Update category progress
     Object.entries(categoryBreakdown).forEach(([category, stats]) => {
       if (!progress.categoryProgress[category]) {
@@ -173,8 +181,8 @@ const PracticeTest = () => {
         <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1 sm:gap-2">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => navigate("/practice-selection")}
                 className="h-8 w-8 sm:h-9 sm:w-9 p-0"
@@ -196,9 +204,7 @@ const PracticeTest = () => {
                 <SheetContent side="right" className="w-[300px] sm:w-[400px]">
                   <SheetHeader>
                     <SheetTitle>Question Overview</SheetTitle>
-                    <SheetDescription>
-                      Click on any question to jump to it
-                    </SheetDescription>
+                    <SheetDescription>Click on any question to jump to it</SheetDescription>
                   </SheetHeader>
                   <div className="mt-6 grid grid-cols-5 gap-2">
                     {questions.map((_, idx) => {
@@ -213,7 +219,7 @@ const PracticeTest = () => {
                             status === "correct" && "bg-success/20 text-success hover:bg-success/30",
                             status === "incorrect" && "bg-destructive/20 text-destructive hover:bg-destructive/30",
                             status === "skipped" && "bg-amber-500/20 text-amber-600 hover:bg-amber-500/30",
-                            status === "unanswered" && "bg-muted text-muted-foreground hover:bg-muted/80"
+                            status === "unanswered" && "bg-muted text-muted-foreground hover:bg-muted/80",
                           )}
                         >
                           {idx + 1}
@@ -256,18 +262,13 @@ const PracticeTest = () => {
                   </AlertDialogHeader>
                   <AlertDialogFooter className="flex-col sm:flex-row gap-2">
                     <AlertDialogCancel className="m-0">Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleReset}>
-                      Reset Test
-                    </AlertDialogAction>
+                    <AlertDialogAction onClick={handleReset}>Reset Test</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
               <div className="flex items-center gap-1.5 sm:gap-2 px-2 py-1 rounded-md bg-muted/50">
                 <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className={cn(
-                  "font-mono font-semibold tabular-nums",
-                  timeLeft < 300 && "text-destructive"
-                )}>
+                <span className={cn("font-mono font-semibold tabular-nums", timeLeft < 300 && "text-destructive")}>
                   {minutes}:{seconds.toString().padStart(2, "0")}
                 </span>
               </div>
@@ -288,18 +289,14 @@ const PracticeTest = () => {
                     status === "correct" && "bg-success",
                     status === "incorrect" && "bg-destructive",
                     status === "skipped" && "bg-amber-500",
-                    status === "unanswered" && "bg-muted-foreground/30"
+                    status === "unanswered" && "bg-muted-foreground/30",
                   )}
                   title={`Question ${idx + 1}`}
                 />
               );
             })}
           </div>
-          {category && (
-            <div className="text-[10px] sm:text-xs text-muted-foreground mb-2">
-              Category: {category}
-            </div>
-          )}
+          {category && <div className="text-[10px] sm:text-xs text-muted-foreground mb-2">Category: {category}</div>}
           <Progress value={((currentIndex + 1) / questions.length) * 100} className="h-1.5 sm:h-2" />
         </div>
       </div>
@@ -309,19 +306,11 @@ const PracticeTest = () => {
           <CardContent className="p-4 sm:p-6">
             {/* Question */}
             <div className="mb-6">
-              <div className="text-xs text-muted-foreground mb-2">
-                {currentQuestion.category}
-              </div>
-              <h2 className="text-xl font-semibold mb-4">
-                {currentQuestion.question}
-              </h2>
+              <div className="text-xs text-muted-foreground mb-2">{currentQuestion.category}</div>
+              <h2 className="text-xl font-semibold mb-4">{currentQuestion.question}</h2>
               {currentQuestion.imageUrl && (
                 <div className="mb-4 flex justify-center">
-                  <img 
-                    src={currentQuestion.imageUrl} 
-                    alt="Road sign" 
-                    className="w-32 h-32 object-contain"
-                  />
+                  <img src={currentQuestion.imageUrl} alt="Road sign" className="w-32 h-32 object-contain" />
                 </div>
               )}
             </div>
@@ -339,15 +328,23 @@ const PracticeTest = () => {
                     <div
                       key={idx}
                       className={`flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                        showCorrect ? "border-success bg-success/5" :
-                        showIncorrect ? "border-destructive bg-destructive/5" :
-                        isSelected ? "border-primary bg-primary/5" :
-                        "border-border hover:border-primary/50"
+                        showCorrect
+                          ? "border-success bg-success/5"
+                          : showIncorrect
+                            ? "border-destructive bg-destructive/5"
+                            : isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-border hover:border-primary/50"
                       }`}
                       onClick={() => handleAnswerSelect(idx)}
                     >
-                      <RadioGroupItem value={idx.toString()} id={`option-${idx}`} disabled={showExplanation} className="shrink-0" />
-                      <Label 
+                      <RadioGroupItem
+                        value={idx.toString()}
+                        id={`option-${idx}`}
+                        disabled={showExplanation}
+                        className="shrink-0"
+                      />
+                      <Label
                         htmlFor={`option-${idx}`}
                         className="flex-1 cursor-pointer font-normal text-sm sm:text-base"
                       >
@@ -365,9 +362,7 @@ const PracticeTest = () => {
             {showExplanation && (
               <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-muted animate-slide-up">
                 <h3 className="font-semibold mb-2 text-sm sm:text-base">Explanation</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">
-                  {currentQuestion.explanation}
-                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{currentQuestion.explanation}</p>
               </div>
             )}
 
@@ -375,7 +370,7 @@ const PracticeTest = () => {
             <div className="mt-4 sm:mt-6 flex gap-2 sm:gap-3">
               {!showExplanation ? (
                 <>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
@@ -384,16 +379,12 @@ const PracticeTest = () => {
                     <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Back
                   </Button>
-                  <Button 
-                    variant="secondary"
-                    onClick={handleSkip}
-                    className="h-10 sm:h-11 text-sm sm:text-base"
-                  >
+                  <Button variant="secondary" onClick={handleSkip} className="h-10 sm:h-11 text-sm sm:text-base">
                     <SkipForward className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Skip
                   </Button>
-                  <Button 
-                    className="flex-1 h-10 sm:h-11 text-sm sm:text-base" 
+                  <Button
+                    className="flex-1 h-10 sm:h-11 text-sm sm:text-base"
                     onClick={handleSubmitAnswer}
                     disabled={selectedAnswer === null}
                   >
@@ -402,7 +393,7 @@ const PracticeTest = () => {
                 </>
               ) : (
                 <>
-                  <Button 
+                  <Button
                     variant="outline"
                     onClick={handlePrevious}
                     disabled={currentIndex === 0}
@@ -411,12 +402,11 @@ const PracticeTest = () => {
                     <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-2" />
                     Back
                   </Button>
-                  <Button 
-                    className="flex-1 gap-2 h-10 sm:h-11 text-sm sm:text-base" 
-                    onClick={handleNext}
-                  >
+                  <Button className="flex-1 gap-2 h-10 sm:h-11 text-sm sm:text-base" onClick={handleNext}>
                     {currentIndex < questions.length - 1 ? (
-                      <>Next <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" /></>
+                      <>
+                        Next <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
+                      </>
                     ) : (
                       "Finish"
                     )}
@@ -434,19 +424,26 @@ const PracticeTest = () => {
               {answers.filter((a, i) => a === questions[i]?.correctAnswer).length} correct
             </span>
             <span className="text-muted-foreground">•</span>
-            <span className="font-medium">
-              {answers.filter(a => a !== null).length} answered
-            </span>
-            {answers.filter(a => a !== null).length > 0 && (
+            <span className="font-medium">{answers.filter((a) => a !== null).length} answered</span>
+            {answers.filter((a) => a !== null).length > 0 && (
               <>
                 <span className="text-muted-foreground">•</span>
-                <span className={cn(
-                  "font-semibold",
-                  (answers.filter((a, i) => a === questions[i]?.correctAnswer).length / answers.filter(a => a !== null).length) >= 0.8 
-                    ? "text-success" 
-                    : "text-muted-foreground"
-                )}>
-                  {Math.round((answers.filter((a, i) => a === questions[i]?.correctAnswer).length / answers.filter(a => a !== null).length) * 100)}% accuracy
+                <span
+                  className={cn(
+                    "font-semibold",
+                    answers.filter((a, i) => a === questions[i]?.correctAnswer).length /
+                      answers.filter((a) => a !== null).length >=
+                      0.8
+                      ? "text-success"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {Math.round(
+                    (answers.filter((a, i) => a === questions[i]?.correctAnswer).length /
+                      answers.filter((a) => a !== null).length) *
+                      100,
+                  )}
+                  % accuracy
                 </span>
               </>
             )}
