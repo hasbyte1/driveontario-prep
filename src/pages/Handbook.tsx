@@ -20,49 +20,12 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
-export const transformChildrenToString = (children: ReactNode | ReactNode[]): string => {
-  if (!Array.isArray(children) && !isValidElement(children)) {
-    return childToString(children);
-  }
-
-  return Children.toArray(children).reduce((text: string, child: ReactNode): string => {
-    let newText = "";
-
-    if (hasChildren(child)) {
-      newText = transformChildrenToString(child.props.children);
-    } else if (isValidElement(child)) {
-      newText = "";
-    } else {
-      newText = childToString(child);
-    }
-
-    return text.concat(newText);
-  }, "");
-};
-
-const childToString = (child?: ReactNode): string => {
-  if (typeof child === "undefined" || child === null || typeof child === "boolean") {
-    return "";
-  }
-
-  if (JSON.stringify(child) === "{}") {
-    return "";
-  }
-
-  return child.toString();
-};
-
-const hasChildren = (element: ReactNode): element is ReactElement<{ children: ReactNode | ReactNode[] }> =>
-  isValidElement<{ children?: ReactNode[] }>(element) && Boolean(element.props.children);
-
 const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
-  console.log({ text });
   if (!searchQuery.trim()) {
     return <>{text}</>;
   }
 
-  const txt = transformChildrenToString(text);
-  const parts = txt.split(new RegExp(`(${searchQuery})`, "gi"));
+  const parts = text.split(new RegExp(`(${searchQuery})`, "gi"));
 
   return (
     <>
@@ -234,6 +197,34 @@ const Handbook = () => {
                         </AccordionTrigger>
                         <AccordionContent className="text-xs sm:text-sm text-muted-foreground pb-3 pt-1">
                           <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+                            <p className="font-bold">
+                              <HighlightedText text={section.description} searchQuery={searchQuery} />
+                            </p>
+                            {section.topics.map((stopic) => (
+                              <div key={"section_topic__" + topic.title + "__" + section.name + "__" + stopic.title}>
+                                <p>
+                                  <HighlightedText text={stopic.title} searchQuery={searchQuery} />
+                                </p>
+                                <ul>
+                                  {stopic.points.map((point, pointIndex) => (
+                                    <li
+                                      key={
+                                        "section_topic_point__" +
+                                        topic.title +
+                                        "__" +
+                                        section.name +
+                                        "__" +
+                                        stopic.title +
+                                        "__" +
+                                        pointIndex
+                                      }
+                                    >
+                                      <HighlightedText text={point} searchQuery={searchQuery} />
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
                             <ReactMarkdown
                               components={{
                                 p: ({ children }) => (
