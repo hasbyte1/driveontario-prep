@@ -55,16 +55,6 @@ const childToString = (child?: ReactNode): string => {
 const hasChildren = (element: ReactNode): element is ReactElement<{ children: ReactNode | ReactNode[] }> =>
   isValidElement<{ children?: ReactNode[] }>(element) && Boolean(element.props.children);
 
-const getTextFromChildren = (text: React.ReactNode) => {
-  return typeof text === "number"
-    ? String(text)
-    : Array.isArray(text)
-      ? text.join("\n")
-      : isValidElement(text)
-        ? Children.map(text, (child) => getTextFromChildren(child))
-        : String(text);
-};
-
 const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
   console.log({ text });
   if (!searchQuery.trim()) {

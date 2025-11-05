@@ -9,18 +9,58 @@ export interface HandbookTopic {
   description: string;
   icon: string;
   sections: HandbookSection[];
+  sectionsDescription?: string;
+  topics?: {
+    title: string;
+    points: string[];
+  }[];
 }
 
 export const handbookTopics: HandbookTopic[] = [
-    {
-      title: "Getting Your License",
-      description: "Learn about the graduated licensing system and requirements",
-      icon: "FileText",
-      sections: [
-        { 
-          name: "Graduated Licensing System (G1, G2, G)", 
-          keywords: ["license", "g1", "g2", "graduated", "requirements", "age", "test"],
-          content: `Ontario uses a graduated licensing system with three levels: G1, G2, and full G license.
+  {
+    title: "Getting Your License",
+    description: "Learn about the graduated licensing system and requirements",
+    icon: "FileText",
+    sectionsDescription: "Ontario uses a graduated licensing system with three levels: G1, G2, and full G license.",
+    sections: [
+      {
+        name: "Graduated Licensing System (G1, G2, G)",
+        keywords: ["license", "g1", "g2", "graduated", "requirements", "age", "test"],
+        topics: [
+          {
+            title: "G1 License (Beginner)",
+            points: [
+              "Must be at least 16 years old",
+              "Pass a written knowledge test covering road signs and rules",
+              "Zero blood alcohol level - no drinking and driving at all",
+              "Must be accompanied by a licensed driver with at least 4 years of experience",
+              "Cannot drive on 400-series highways or high-speed expressways",
+              "Cannot drive between midnight and 5 a.m.",
+              "All passengers must wear seatbelts (limited by number of working seatbelts)",
+              "Must hold G1 for at least 12 months (8 months if completed approved driver education course)",
+            ],
+          },
+          {
+            title: "G2 License (Intermediate)",
+            points: [
+              "Pass a road test demonstrating basic driving skills",
+              "Zero blood alcohol level if under 21 years old",
+              "Can drive alone without supervision",
+              "Can drive on all roads including highways",
+              "Passenger restrictions apply if under 20 years old and during first 6 months",
+              "Must hold G2 for at least 12 months before taking full G test",
+            ],
+          },
+          {
+            title: "Full G License",
+            points: [
+              "Pass an advanced road test",
+              "No restrictions",
+              "Can drive any time, anywhere with full privileges",
+            ],
+          },
+        ],
+        content: `Ontario uses a graduated licensing system with three levels: G1, G2, and full G license.
 
 **G1 License (Beginner):**
 - Must be at least 16 years old
@@ -43,12 +83,12 @@ export const handbookTopics: HandbookTopic[] = [
 **Full G License:**
 - Pass an advanced road test
 - No restrictions
-- Can drive any time, anywhere with full privileges`
-        },
-        { 
-          name: "Vision Requirements", 
-          keywords: ["vision", "eyesight", "test", "glasses", "contacts", "visual acuity"],
-          content: `All drivers must meet minimum vision standards to drive safely in Ontario.
+- Can drive any time, anywhere with full privileges`,
+      },
+      {
+        name: "Vision Requirements",
+        keywords: ["vision", "eyesight", "test", "glasses", "contacts", "visual acuity"],
+        content: `All drivers must meet minimum vision standards to drive safely in Ontario.
 
 **Vision Standards:**
 - Visual acuity of at least 20/50 with both eyes open (with corrective lenses if needed)
@@ -64,12 +104,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Have your eyes checked regularly by an eye care professional
 - Clean your windshield and mirrors regularly
 - Adjust your driving if vision is affected by weather, sun glare, or darkness
-- If you notice any changes in your vision, see an eye care professional immediately`
-        },
-        { 
-          name: "Fees and Renewals", 
-          keywords: ["fee", "cost", "renewal", "expire", "price", "payment"],
-          content: `Understanding licensing fees and renewal requirements.
+- If you notice any changes in your vision, see an eye care professional immediately`,
+      },
+      {
+        name: "Fees and Renewals",
+        keywords: ["fee", "cost", "renewal", "expire", "price", "payment"],
+        content: `Understanding licensing fees and renewal requirements.
 
 **G1 Knowledge Test:**
 - Written test fee applies
@@ -92,19 +132,19 @@ export const handbookTopics: HandbookTopic[] = [
 - Driving with an expired license is illegal
 - Set reminders for renewal dates
 - Update address with MTO within 6 days of moving
-- Fees are subject to change - check ServiceOntario for current rates`
-        },
-      ]
-    },
-    {
-      title: "Road Signs & Signals",
-      description: "Understanding traffic signs, signals, and road markings",
-      icon: "AlertTriangle",
-      sections: [
-        { 
-          name: "Regulatory Signs", 
-          keywords: ["stop", "yield", "speed limit", "no entry", "regulatory", "must", "required"],
-          content: `Regulatory signs tell you about traffic laws and regulations you must obey.
+- Fees are subject to change - check ServiceOntario for current rates`,
+      },
+    ],
+  },
+  {
+    title: "Road Signs & Signals",
+    description: "Understanding traffic signs, signals, and road markings",
+    icon: "AlertTriangle",
+    sections: [
+      {
+        name: "Regulatory Signs",
+        keywords: ["stop", "yield", "speed limit", "no entry", "regulatory", "must", "required"],
+        content: `Regulatory signs tell you about traffic laws and regulations you must obey.
 
 **Stop Signs:**
 - Octagonal red sign with white letters
@@ -132,12 +172,12 @@ export const handbookTopics: HandbookTopic[] = [
 **One-Way Signs:**
 - Rectangular with black arrow on white background
 - All traffic must travel in direction shown
-- Watch for these at intersections`
-        },
-        { 
-          name: "Warning Signs", 
-          keywords: ["warning", "curve", "deer", "school zone", "construction", "caution", "ahead"],
-          content: `Warning signs alert you to potential hazards or changes in road conditions ahead.
+- Watch for these at intersections`,
+      },
+      {
+        name: "Warning Signs",
+        keywords: ["warning", "curve", "deer", "school zone", "construction", "caution", "ahead"],
+        content: `Warning signs alert you to potential hazards or changes in road conditions ahead.
 
 **Common Warning Signs:**
 
@@ -173,12 +213,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Large X with two Rs
 - Slow down, look both ways
 - Never stop on tracks
-- Trains always have right-of-way`
-        },
-        { 
-          name: "Information Signs", 
-          keywords: ["information", "direction", "hospital", "parking", "services", "guide"],
-          content: `Information and guide signs provide helpful information about directions, services, and points of interest.
+- Trains always have right-of-way`,
+      },
+      {
+        name: "Information Signs",
+        keywords: ["information", "direction", "hospital", "parking", "services", "guide"],
+        content: `Information and guide signs provide helpful information about directions, services, and points of interest.
 
 **Types of Information Signs:**
 
@@ -211,12 +251,12 @@ export const handbookTopics: HandbookTopic[] = [
 **Exit Numbers:**
 - Help identify specific highway exits
 - Correspond to distance markers
-- Important for navigation and meeting points`
-        },
-        { 
-          name: "Traffic Lights", 
-          keywords: ["traffic light", "red", "yellow", "green", "signal", "intersection", "arrow"],
-          content: `Understanding traffic signals is crucial for safe intersection navigation.
+- Important for navigation and meeting points`,
+      },
+      {
+        name: "Traffic Lights",
+        keywords: ["traffic light", "red", "yellow", "green", "signal", "intersection", "arrow"],
+        content: `Understanding traffic signals is crucial for safe intersection navigation.
 
 **Green Light:**
 - Proceed through intersection when safe
@@ -252,12 +292,12 @@ export const handbookTopics: HandbookTopic[] = [
 **Transit Signals:**
 - White vertical bar for go, horizontal bar for stop
 - Apply only to public transit vehicles
-- Other vehicles follow regular traffic signals`
-        },
-        { 
-          name: "Pavement Markings", 
-          keywords: ["lines", "yellow line", "white line", "crosswalk", "markings", "lane", "solid", "broken"],
-          content: `Pavement markings guide traffic and indicate where you can and cannot drive.
+- Other vehicles follow regular traffic signals`,
+      },
+      {
+        name: "Pavement Markings",
+        keywords: ["lines", "yellow line", "white line", "crosswalk", "markings", "lane", "solid", "broken"],
+        content: `Pavement markings guide traffic and indicate where you can and cannot drive.
 
 **Yellow Lines:**
 - Separate traffic traveling in opposite directions
@@ -294,19 +334,19 @@ export const handbookTopics: HandbookTopic[] = [
 
 **Arrows:**
 - Show required or permitted direction of travel in lane
-- Must follow arrow direction when in that lane`
-        },
-      ]
-    },
-    {
-      title: "Rules of the Road",
-      description: "Traffic laws, right-of-way, and safe driving practices",
-      icon: "Car",
-      sections: [
-        { 
-          name: "Speed Limits", 
-          keywords: ["speed", "limit", "maximum", "minimum", "kmh", "fast", "slow"],
-          content: `Speed limits are the maximum legal speeds under ideal conditions. Adjust speed for conditions.
+- Must follow arrow direction when in that lane`,
+      },
+    ],
+  },
+  {
+    title: "Rules of the Road",
+    description: "Traffic laws, right-of-way, and safe driving practices",
+    icon: "Car",
+    sections: [
+      {
+        name: "Speed Limits",
+        keywords: ["speed", "limit", "maximum", "minimum", "kmh", "fast", "slow"],
+        content: `Speed limits are the maximum legal speeds under ideal conditions. Adjust speed for conditions.
 
 **Default Speed Limits in Ontario:**
 - 50 km/h in cities, towns, and villages
@@ -336,12 +376,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Follow the 2-second rule (3-4 seconds in poor conditions)
 - Watch speedometer regularly
 - Be aware of sudden changes in speed limits
-- Slow down before curves, not during`
-        },
-        { 
-          name: "Right-of-Way Rules", 
-          keywords: ["right of way", "yield", "intersection", "priority", "who goes first"],
-          content: `Right-of-way rules determine who has priority at intersections and other situations.
+- Slow down before curves, not during`,
+      },
+      {
+        name: "Right-of-Way Rules",
+        keywords: ["right of way", "yield", "intersection", "priority", "who goes first"],
+        content: `Right-of-way rules determine who has priority at intersections and other situations.
 
 **At Intersections:**
 - Vehicle on the right has right-of-way when two vehicles arrive at same time
@@ -378,12 +418,12 @@ export const handbookTopics: HandbookTopic[] = [
 
 **Funeral Processions:**
 - Yield right-of-way to funeral processions
-- Don't cut between vehicles in procession`
-        },
-        { 
-          name: "Passing and Lane Use", 
-          keywords: ["passing", "overtaking", "lane", "left lane", "passing zone", "no passing"],
-          content: `Rules for safe and legal passing maneuvers and proper lane usage.
+- Don't cut between vehicles in procession`,
+      },
+      {
+        name: "Passing and Lane Use",
+        keywords: ["passing", "overtaking", "lane", "left lane", "passing zone", "no passing"],
+        content: `Rules for safe and legal passing maneuvers and proper lane usage.
 
 **When Passing is Allowed:**
 - Broken yellow center line on your side
@@ -422,12 +462,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Choose lane for your destination and speed
 - Don't weave between lanes
 - Signal all lane changes
-- Check blind spots before changing lanes`
-        },
-        { 
-          name: "Turning and Signals", 
-          keywords: ["turn", "left turn", "right turn", "signal", "indicator", "blinker"],
-          content: `Proper turning techniques and signal usage for safe maneuvering.
+- Check blind spots before changing lanes`,
+      },
+      {
+        name: "Turning and Signals",
+        keywords: ["turn", "left turn", "right turn", "signal", "indicator", "blinker"],
+        content: `Proper turning techniques and signal usage for safe maneuvering.
 
 **Turn Signals:**
 - Signal at least 30 meters (100 feet) before turning
@@ -469,12 +509,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Not at controlled intersections unless sign permits
 - Not on curves, hills, or where visibility is limited
 - Yield to all traffic and pedestrians
-- Use left turn techniques`
-        },
-        { 
-          name: "Stopping and Parking", 
-          keywords: ["parking", "stop", "prohibited", "no parking", "no stopping", "fire hydrant"],
-          content: `Rules for legal and safe parking and stopping.
+- Use left turn techniques`,
+      },
+      {
+        name: "Stopping and Parking",
+        keywords: ["parking", "stop", "prohibited", "no parking", "no stopping", "fire hydrant"],
+        content: `Rules for legal and safe parking and stopping.
 
 **Where You Cannot Park:**
 - Within 9 meters of fire hydrant
@@ -526,19 +566,19 @@ export const handbookTopics: HandbookTopic[] = [
 **Fire Routes:**
 - Designated by signs
 - No stopping or parking at any time
-- Heavy fines and towing enforced`
-        },
-      ]
-    },
-    {
-      title: "Sharing the Road",
-      description: "Interacting safely with other road users",
-      icon: "Users",
-      sections: [
-        { 
-          name: "Pedestrians", 
-          keywords: ["pedestrian", "crosswalk", "sidewalk", "walker", "crossing", "yield"],
-          content: `Drivers must watch for and yield to pedestrians to keep everyone safe.
+- Heavy fines and towing enforced`,
+      },
+    ],
+  },
+  {
+    title: "Sharing the Road",
+    description: "Interacting safely with other road users",
+    icon: "Users",
+    sections: [
+      {
+        name: "Pedestrians",
+        keywords: ["pedestrian", "crosswalk", "sidewalk", "walker", "crossing", "yield"],
+        content: `Drivers must watch for and yield to pedestrians to keep everyone safe.
 
 **Pedestrian Right-of-Way:**
 - Always yield to pedestrians in marked or unmarked crosswalks
@@ -578,12 +618,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Watch for pedestrians, especially children
 - Use mirrors and turn your head to look
 - Back up slowly
-- Have someone guide you if visibility limited`
-        },
-        { 
-          name: "Cyclists and Bicycle Safety", 
-          keywords: ["bicycle", "cyclist", "bike", "cycling", "bike lane"],
-          content: `Cyclists have the same rights and responsibilities as drivers. Share the road safely.
+- Have someone guide you if visibility limited`,
+      },
+      {
+        name: "Cyclists and Bicycle Safety",
+        keywords: ["bicycle", "cyclist", "bike", "cycling", "bike lane"],
+        content: `Cyclists have the same rights and responsibilities as drivers. Share the road safely.
 
 **Cyclists' Rights:**
 - Entitled to use roads (except highways where prohibited)
@@ -623,12 +663,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Cyclists may position in center of lane at lights
 - Don't squeeze past cyclists at intersections
 - Watch for cyclists going straight as you turn
-- Cyclists may filter forward at red lights - allow space`
-        },
-        { 
-          name: "Motorcycles and Scooters", 
-          keywords: ["motorcycle", "motorbike", "rider", "scooter", "two wheels"],
-          content: `Motorcycles are smaller and less visible but have the same road rights as cars.
+- Cyclists may filter forward at red lights - allow space`,
+      },
+      {
+        name: "Motorcycles and Scooters",
+        keywords: ["motorcycle", "motorbike", "rider", "scooter", "two wheels"],
+        content: `Motorcycles are smaller and less visible but have the same road rights as cars.
 
 **Why Motorcycles are Different:**
 - Smaller and harder to see
@@ -671,12 +711,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Wind: motorcycles affected by strong winds and wind blast from large vehicles
 - Rain: reduced traction affects motorcycles more
 - Gravel: motorcycles must slow for loose gravel
-- Railroad tracks: riders may change position to cross safely`
-        },
-        { 
-          name: "Large Vehicles and Trucks", 
-          keywords: ["truck", "bus", "large vehicle", "blind spot", "commercial", "tractor trailer"],
-          content: `Large vehicles require special consideration due to their size, weight, and limited visibility.
+- Railroad tracks: riders may change position to cross safely`,
+      },
+      {
+        name: "Large Vehicles and Trucks",
+        keywords: ["truck", "bus", "large vehicle", "blind spot", "commercial", "tractor trailer"],
+        content: `Large vehicles require special consideration due to their size, weight, and limited visibility.
 
 **Blind Spots (No-Zones):**
 - Large areas where truck driver cannot see other vehicles
@@ -729,12 +769,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Trucks may travel slower uphill
 - Trucks gain speed downhill
 - Give trucks space to merge
-- Don't brake suddenly in front of trucks`
-        },
-        { 
-          name: "Emergency Vehicles", 
-          keywords: ["ambulance", "police", "fire truck", "emergency", "siren", "flashing lights"],
-          content: `You must yield right-of-way to emergency vehicles with flashing lights and sirens.
+- Don't brake suddenly in front of trucks`,
+      },
+      {
+        name: "Emergency Vehicles",
+        keywords: ["ambulance", "police", "fire truck", "emergency", "siren", "flashing lights"],
+        content: `You must yield right-of-way to emergency vehicles with flashing lights and sirens.
 
 **Types of Emergency Vehicles:**
 - Police cars
@@ -784,19 +824,19 @@ export const handbookTopics: HandbookTopic[] = [
 **Penalties:**
 - Failing to yield to emergency vehicle: heavy fines and demerit points
 - Move over law violations: significant fines
-- May face additional charges if collision results`
-        },
-      ]
-    },
-    {
-      title: "Driving Techniques",
-      description: "Essential skills for safe and defensive driving",
-      icon: "Navigation",
-      sections: [
-        { 
-          name: "Defensive Driving", 
-          keywords: ["defensive", "anticipate", "safe following distance", "awareness", "prevention"],
-          content: `Defensive driving means anticipating problems and taking action to avoid collisions.
+- May face additional charges if collision results`,
+      },
+    ],
+  },
+  {
+    title: "Driving Techniques",
+    description: "Essential skills for safe and defensive driving",
+    icon: "Navigation",
+    sections: [
+      {
+        name: "Defensive Driving",
+        keywords: ["defensive", "anticipate", "safe following distance", "awareness", "prevention"],
+        content: `Defensive driving means anticipating problems and taking action to avoid collisions.
 
 **Key Principles:**
 - Always expect the unexpected
@@ -850,12 +890,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Adjust driving for weather and traffic
 - Know your vehicle's capabilities and limits
 - Plan trips and allow extra time
-- Take breaks on long trips`
-        },
-        { 
-          name: "Intersections", 
-          keywords: ["intersection", "crossing", "junction", "right of way", "traffic light"],
-          content: `Intersections are where most collisions occur. Approach them with extra caution.
+- Take breaks on long trips`,
+      },
+      {
+        name: "Intersections",
+        keywords: ["intersection", "crossing", "junction", "right of way", "traffic light"],
+        content: `Intersections are where most collisions occur. Approach them with extra caution.
 
 **Approaching Intersections:**
 - Slow down and scan in all directions
@@ -913,12 +953,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Watch for crossing guards
 - Stop when signaled by guard
 - Watch for children crossing
-- Be extra cautious near schools during school hours`
-        },
-        { 
-          name: "Highway Driving", 
-          keywords: ["highway", "freeway", "expressway", "merging", "401", "fast", "high speed"],
-          content: `Highway driving requires different skills than city driving due to higher speeds and traffic volume.
+- Be extra cautious near schools during school hours`,
+      },
+      {
+        name: "Highway Driving",
+        keywords: ["highway", "freeway", "expressway", "merging", "401", "fast", "high speed"],
+        content: `Highway driving requires different skills than city driving due to higher speeds and traffic volume.
 
 **Entering Highway (Merging):**
 - Use acceleration lane to match highway speed
@@ -981,12 +1021,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Stay alert for signs of fatigue
 - Keep to right except when passing
 - Use cruise control on long straight sections
-- Maintain focus despite monotony`
-        },
-        { 
-          name: "Night Driving", 
-          keywords: ["night", "dark", "headlights", "visibility", "low light"],
-          content: `Night driving presents unique challenges due to reduced visibility and increased risk.
+- Maintain focus despite monotony`,
+      },
+      {
+        name: "Night Driving",
+        keywords: ["night", "dark", "headlights", "visibility", "low light"],
+        content: `Night driving presents unique challenges due to reduced visibility and increased risk.
 
 **Visibility Challenges:**
 - Reduced depth perception and peripheral vision
@@ -1040,12 +1080,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Animals more active (especially deer at dawn and dusk)
 - Pedestrians harder to see, especially in dark clothing
 - Construction zones may have poor lighting
-- Reduced ability to see road conditions and hazards`
-        },
-        { 
-          name: "Winter Driving", 
-          keywords: ["winter", "snow", "ice", "cold weather", "slippery", "skid"],
-          content: `Winter driving requires special skills and vehicle preparation for safe travel in snow and ice.
+- Reduced ability to see road conditions and hazards`,
+      },
+      {
+        name: "Winter Driving",
+        keywords: ["winter", "snow", "ice", "cold weather", "slippery", "skid"],
+        content: `Winter driving requires special skills and vehicle preparation for safe travel in snow and ice.
 
 **Vehicle Preparation:**
 - Install winter tires on all four wheels (required by law in some areas)
@@ -1120,19 +1160,19 @@ export const handbookTopics: HandbookTopic[] = [
 - Slush: causes hydroplaning like water
 - Freeze-thaw cycles: create ice patches
 - Sun glare off snow: wear sunglasses, use visor
-- Shortened daylight hours: more driving in darkness`
-        },
-      ]
-    },
-    {
-      title: "Safety Equipment",
-      description: "Vehicle safety features and requirements",
-      icon: "Shield",
-      sections: [
-        { 
-          name: "Seat Belts", 
-          keywords: ["seat belt", "safety belt", "restraint", "buckle up"],
-          content: `Seat belts are your most important safety feature and are required by law in Ontario.
+- Shortened daylight hours: more driving in darkness`,
+      },
+    ],
+  },
+  {
+    title: "Safety Equipment",
+    description: "Vehicle safety features and requirements",
+    icon: "Shield",
+    sections: [
+      {
+        name: "Seat Belts",
+        keywords: ["seat belt", "safety belt", "restraint", "buckle up"],
+        content: `Seat belts are your most important safety feature and are required by law in Ontario.
 
 **Seat Belt Laws:**
 - Driver and all passengers must wear seat belts
@@ -1177,12 +1217,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Ensure buckles click and release properly
 - Replace after any collision
 - Don't use belt clips or positioning aids
-- Have damaged belts replaced immediately`
-        },
-        { 
-          name: "Child Safety Seats", 
-          keywords: ["child", "car seat", "booster", "infant", "toddler", "child restraint"],
-          content: `Children require proper restraints based on their age, weight, and height for maximum protection.
+- Have damaged belts replaced immediately`,
+      },
+      {
+        name: "Child Safety Seats",
+        keywords: ["child", "car seat", "booster", "infant", "toddler", "child restraint"],
+        content: `Children require proper restraints based on their age, weight, and height for maximum protection.
 
 **Legal Requirements (Ontario):**
 - Infants under 1 year: rear-facing car seat
@@ -1237,12 +1277,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Harness not tight enough
 - Moving to next stage too soon
 - Using second-hand seat with unknown history
-- Placing rear-facing seat in front with active airbag`
-        },
-        { 
-          name: "Airbags", 
-          keywords: ["airbag", "srs", "supplemental restraint", "safety"],
-          content: `Airbags provide supplemental protection but only work properly when combined with seat belts.
+- Placing rear-facing seat in front with active airbag`,
+      },
+      {
+        name: "Airbags",
+        keywords: ["airbag", "srs", "supplemental restraint", "safety"],
+        content: `Airbags provide supplemental protection but only work properly when combined with seat belts.
 
 **How Airbags Work:**
 - Sensors detect collision
@@ -1300,12 +1340,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Myth: All airbags same
   - Truth: Different types for different crash scenarios
 - Myth: Airbags deploy in all collisions
-  - Truth: Only deploy in moderate to severe frontal or side impacts`
-        },
-        { 
-          name: "Vehicle Lights and Signals", 
-          keywords: ["headlight", "brake light", "turn signal", "hazard", "lights", "lamps"],
-          content: `Proper use and maintenance of vehicle lights is essential for seeing and being seen.
+  - Truth: Only deploy in moderate to severe frontal or side impacts`,
+      },
+      {
+        name: "Vehicle Lights and Signals",
+        keywords: ["headlight", "brake light", "turn signal", "hazard", "lights", "lamps"],
+        content: `Proper use and maintenance of vehicle lights is essential for seeing and being seen.
 
 **Headlights:**
 - Use from 30 minutes before sunset to 30 minutes after sunrise
@@ -1385,12 +1425,12 @@ export const handbookTopics: HandbookTopic[] = [
 - Blue lights: police, snow plows
 - Amber/yellow lights: tow trucks, construction vehicles
 - Green lights: volunteer firefighters
-- Flashing lights mean yield right-of-way and/or slow down and move over`
-        },
-        { 
-          name: "Mirrors and Blind Spots", 
-          keywords: ["mirror", "blind spot", "rear view", "side mirror", "check", "shoulder check"],
-          content: `Proper mirror use and blind spot checking are essential for safe lane changes and turns.
+- Flashing lights mean yield right-of-way and/or slow down and move over`,
+      },
+      {
+        name: "Mirrors and Blind Spots",
+        keywords: ["mirror", "blind spot", "rear view", "side mirror", "check", "shoulder check"],
+        content: `Proper mirror use and blind spot checking are essential for safe lane changes and turns.
 
 **Types of Mirrors:**
 - Interior rearview mirror: shows traffic directly behind
@@ -1457,8 +1497,8 @@ export const handbookTopics: HandbookTopic[] = [
 - Use rearview mirror night setting to reduce glare
 - Side mirrors may be more difficult to use
 - Headlights help identify vehicles in mirrors
-- Extra caution needed for checking blind spots`
-        },
-      ]
-    },
-  ];
+- Extra caution needed for checking blind spots`,
+      },
+    ],
+  },
+];
