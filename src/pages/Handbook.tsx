@@ -20,12 +20,13 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
-const HighlightedText = ({ text, searchQuery }: { text: string; searchQuery: string }) => {
+const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
   if (!searchQuery.trim()) {
     return <>{text}</>;
   }
 
-  const parts = text.split(new RegExp(`(${searchQuery})`, "gi"));
+  const txt = typeof text === "number" ? String(text) : Array.isArray(text) ? text.join("\n") : String(text);
+  const parts = txt.split(new RegExp(`(${searchQuery})`, "gi"));
 
   return (
     <>
@@ -201,22 +202,22 @@ const Handbook = () => {
                               components={{
                                 p: ({ children }) => (
                                   <p>
-                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
                                   </p>
                                 ),
                                 li: ({ children }) => (
                                   <li>
-                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
                                   </li>
                                 ),
                                 strong: ({ children }) => (
                                   <strong>
-                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
                                   </strong>
                                 ),
                                 em: ({ children }) => (
                                   <em>
-                                    <HighlightedText text={String(children)} searchQuery={searchQuery} />
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
                                   </em>
                                 ),
                               }}
