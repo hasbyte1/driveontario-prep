@@ -197,7 +197,35 @@ const Handbook = () => {
                         </AccordionTrigger>
                         <AccordionContent className="text-xs sm:text-sm text-muted-foreground pb-3 pt-1">
                           <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
-                            <ReactMarkdown>{section.content}</ReactMarkdown>
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => (
+                                  <p>
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
+                                  </p>
+                                ),
+                                li: ({ children }) => (
+                                  <li>
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
+                                  </li>
+                                ),
+                                strong: ({ children }) => {
+                                  console.log({ children });
+                                  return (
+                                    <strong>
+                                      <HighlightedText text={children} searchQuery={searchQuery} />
+                                    </strong>
+                                  );
+                                },
+                                em: ({ children }) => (
+                                  <em>
+                                    <HighlightedText text={children} searchQuery={searchQuery} />
+                                  </em>
+                                ),
+                              }}
+                            >
+                              {section.content}
+                            </ReactMarkdown>
                           </div>
                         </AccordionContent>
                       </AccordionItem>
