@@ -8,6 +8,28 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import ReactMarkdown from "react-markdown";
 
+const HighlightedText = ({ text, searchQuery }: { text: string; searchQuery: string }) => {
+  if (!searchQuery.trim()) {
+    return <>{text}</>;
+  }
+
+  const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+  
+  return (
+    <>
+      {parts.map((part, index) => 
+        part.toLowerCase() === searchQuery.toLowerCase() ? (
+          <mark key={index} className="bg-yellow-300 dark:bg-yellow-600 text-foreground rounded px-0.5">
+            {part}
+          </mark>
+        ) : (
+          <span key={index}>{part}</span>
+        )
+      )}
+    </>
+  );
+};
+
 interface HandbookSection {
   name: string;
   content: string;
@@ -1605,7 +1627,14 @@ const Handbook = () => {
                         </AccordionTrigger>
                         <AccordionContent className="text-xs sm:text-sm text-muted-foreground pb-3 pt-1">
                           <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
-                            <ReactMarkdown>
+                            <ReactMarkdown
+                              components={{
+                                p: ({ children }) => <p><HighlightedText text={String(children)} searchQuery={searchQuery} /></p>,
+                                li: ({ children }) => <li><HighlightedText text={String(children)} searchQuery={searchQuery} /></li>,
+                                strong: ({ children }) => <strong><HighlightedText text={String(children)} searchQuery={searchQuery} /></strong>,
+                                em: ({ children }) => <em><HighlightedText text={String(children)} searchQuery={searchQuery} /></em>,
+                              }}
+                            >
                               {section.content}
                             </ReactMarkdown>
                           </div>
