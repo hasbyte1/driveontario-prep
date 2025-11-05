@@ -21,6 +21,7 @@ import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
 const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
+  console.log({ text });
   if (!searchQuery.trim()) {
     return <>{text}</>;
   }
