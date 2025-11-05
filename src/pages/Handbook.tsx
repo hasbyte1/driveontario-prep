@@ -82,7 +82,12 @@ const Handbook = () => {
         (section) =>
           section.name.toLowerCase().includes(query) ||
           section.keywords.some((keyword) => keyword.toLowerCase().includes(query)) ||
-          section.content.toLowerCase().includes(query),
+          section.description?.toLowerCase?.()?.includes?.(query) ||
+          section.topics?.some(
+            (stopic) =>
+              stopic.name.toLowerCase().includes(query) ||
+              stopic.points?.some((point) => point.toLowerCase().includes(query)),
+          ),
       );
 
       return matchingSections.length > 0 ? { ...topic, sections: matchingSections } : null;
@@ -225,32 +230,6 @@ const Handbook = () => {
                                 </ul>
                               </div>
                             ))}
-                            <ReactMarkdown
-                              components={{
-                                p: ({ children }) => (
-                                  <p>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
-                                  </p>
-                                ),
-                                li: ({ children }) => (
-                                  <li>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
-                                  </li>
-                                ),
-                                strong: ({ children }) => (
-                                  <strong>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
-                                  </strong>
-                                ),
-                                em: ({ children }) => (
-                                  <em>
-                                    <HighlightedText text={children} searchQuery={searchQuery} />
-                                  </em>
-                                ),
-                              }}
-                            >
-                              {section.content}
-                            </ReactMarkdown>
                           </div>
                         </AccordionContent>
                       </AccordionItem>
