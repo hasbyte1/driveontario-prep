@@ -85,7 +85,7 @@ const Handbook = () => {
           section.description?.toLowerCase?.()?.includes?.(query) ||
           section.topics?.some(
             (stopic) =>
-              stopic.name.toLowerCase().includes(query) ||
+              stopic.title.toLowerCase().includes(query) ||
               stopic.points?.some((point) => point.toLowerCase().includes(query)),
           ),
       );
