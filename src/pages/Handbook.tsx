@@ -24,10 +24,10 @@ const getTextFromChildren = (text: React.ReactNode) => {
   return typeof text === "number"
     ? String(text)
     : Array.isArray(text)
-    ? text.join("\n")
-    : React.isValidElement(text)
-    ? Children.map(children, child => getTextFromChildren(child))
-    : String(text);
+      ? text.join("\n")
+      : React.isValidElement(text)
+        ? Children.map(text, (child) => getTextFromChildren(child))
+        : String(text);
 };
 
 const HighlightedText = ({ text, searchQuery }: { text: React.ReactNode; searchQuery: string }) => {
