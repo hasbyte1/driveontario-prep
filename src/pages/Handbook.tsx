@@ -209,14 +209,7 @@ const Handbook = () => {
                                     <HighlightedText text={String(children)} searchQuery={searchQuery} />
                                   </li>
                                 ),
-                                strong: ({ children }) => {
-                                  console.log({ children });
-                                  return (
-                                    <strong>
-                                      <HighlightedText text={String(children)} searchQuery={searchQuery} />
-                                    </strong>
-                                  );
-                                },
+
                                 em: ({ children }) => (
                                   <em>
                                     <HighlightedText text={String(children)} searchQuery={searchQuery} />
