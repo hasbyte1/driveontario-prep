@@ -120,7 +120,7 @@ const PracticeTest = () => {
   };
 
   const handleFinishTest = () => {
-    const score = answers.reduce((acc, answer, idx) => (answer === questions[idx].correctAnswer ? acc + 1 : acc), 0);
+    const score = answers.reduce((acc, answer, idx) => (answer === questions[idx]?.correctAnswer ? acc + 1 : acc), 0);
 
     const passed = score >= 32; // 80% pass rate
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
