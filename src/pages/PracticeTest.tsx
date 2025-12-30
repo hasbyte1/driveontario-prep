@@ -5,7 +5,9 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { getRandomQuestions, CATEGORIES } from "@/data/questions";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getTestQuestions, validateAnswer, type Question } from "@/lib/questions-api";
+import { getLocalQuestionWithAnswer } from "@/lib/questions-api";
 import {
   getStoredProgress,
   saveProgress,
@@ -29,26 +31,74 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+// Extended question type for local data with answers
+interface QuestionWithAnswer extends Question {
+  correctAnswer: number;
+  explanation: string;
+}
+
 const PracticeTest = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const category = searchParams.get("category") || undefined;
 
-  const [questions] = useState(() => getRandomQuestions(40, category));
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionAnswers, setQuestionAnswers] = useState<Map<string, { correctAnswer: number; explanation: string }>>(new Map());
+  const [sessionId, setSessionId] = useState<string | undefined>();
+  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [answers, setAnswers] = useState<(number | null)[]>(Array(40).fill(null));
+  const [currentExplanation, setCurrentExplanation] = useState<string>("");
+  const [currentCorrectAnswer, setCurrentCorrectAnswer] = useState<number | null>(null);
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [skippedQuestions, setSkippedQuestions] = useState<Set<number>>(new Set());
   const [startTime] = useState(Date.now());
   const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 minutes in seconds
   const [xpEarned, setXpEarned] = useState(0);
   const [currentStreak, setCurrentStreak] = useState(0);
   const hasAnsweredRef = useRef<Set<number>>(new Set());
+  const questionStartTimeRef = useRef<number>(Date.now());
 
   const currentQuestion = questions[currentIndex];
 
+  // Load questions on mount
   useEffect(() => {
+    const loadQuestions = async () => {
+      setIsLoading(true);
+      try {
+        const result = await getTestQuestions();
+        setQuestions(result.questions);
+        setSessionId(result.sessionId);
+        setAnswers(Array(result.questions.length).fill(null));
+
+        // Pre-load local answers for fallback
+        const answersMap = new Map<string, { correctAnswer: number; explanation: string }>();
+        for (const q of result.questions) {
+          const localQ = getLocalQuestionWithAnswer(q.id);
+          if (localQ) {
+            answersMap.set(q.id, {
+              correctAnswer: localQ.correctAnswer,
+              explanation: localQ.explanation,
+            });
+          }
+        }
+        setQuestionAnswers(answersMap);
+      } catch (error) {
+        console.error('Error loading questions:', error);
+        toast.error('Failed to load questions');
+        navigate('/practice-selection');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadQuestions();
+  }, [navigate]);
+
+  // Timer - only run after questions are loaded
+  useEffect(() => {
+    if (isLoading || questions.length === 0) return;
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -60,7 +110,12 @@ const PracticeTest = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isLoading, questions.length]);
+
+  // Reset question start time when moving to a new question
+  useEffect(() => {
+    questionStartTimeRef.current = Date.now();
+  }, [currentIndex]);
 
   const handleAnswerSelect = (answerIndex: number) => {
     if (!showExplanation) {
@@ -68,7 +123,7 @@ const PracticeTest = () => {
     }
   };
 
-  const handleSubmitAnswer = () => {
+  const handleSubmitAnswer = async () => {
     if (selectedAnswer === null) {
       toast.error("Please select an answer");
       return;
@@ -77,11 +132,31 @@ const PracticeTest = () => {
     const newAnswers = [...answers];
     newAnswers[currentIndex] = selectedAnswer;
     setAnswers(newAnswers);
-    setShowExplanation(true);
 
-    const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
     const isFirstAnswer = !hasAnsweredRef.current.has(currentIndex);
     hasAnsweredRef.current.add(currentIndex);
+
+    // Calculate time spent on this question
+    const timeSpent = Date.now() - questionStartTimeRef.current;
+
+    // Validate answer (uses API or falls back to local)
+    const validation = await validateAnswer(currentQuestion.id, selectedAnswer, timeSpent);
+
+    // Store the correct answer and explanation for display
+    setCurrentCorrectAnswer(validation.correctAnswer);
+    setCurrentExplanation(validation.explanation);
+
+    // Also store in the map for later reference (finish test)
+    const updatedAnswersMap = new Map(questionAnswers);
+    updatedAnswersMap.set(currentQuestion.id, {
+      correctAnswer: validation.correctAnswer,
+      explanation: validation.explanation,
+    });
+    setQuestionAnswers(updatedAnswersMap);
+
+    setShowExplanation(true);
+
+    const isCorrect = validation.correct;
 
     // Calculate XP for this answer
     let answerXp = 0;
@@ -117,9 +192,21 @@ const PracticeTest = () => {
 
   const handleNext = () => {
     if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setSelectedAnswer(answers[currentIndex + 1]);
-      setShowExplanation(answers[currentIndex + 1] !== null);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      setSelectedAnswer(answers[nextIndex]);
+      setShowExplanation(answers[nextIndex] !== null);
+      // Restore explanation if already answered
+      if (answers[nextIndex] !== null) {
+        const storedAnswer = questionAnswers.get(questions[nextIndex].id);
+        if (storedAnswer) {
+          setCurrentCorrectAnswer(storedAnswer.correctAnswer);
+          setCurrentExplanation(storedAnswer.explanation);
+        }
+      } else {
+        setCurrentCorrectAnswer(null);
+        setCurrentExplanation("");
+      }
     } else {
       handleFinishTest();
     }
@@ -135,13 +222,36 @@ const PracticeTest = () => {
     setCurrentIndex(index);
     setSelectedAnswer(answers[index]);
     setShowExplanation(answers[index] !== null);
+    // Restore explanation if already answered
+    if (answers[index] !== null && questions[index]) {
+      const storedAnswer = questionAnswers.get(questions[index].id);
+      if (storedAnswer) {
+        setCurrentCorrectAnswer(storedAnswer.correctAnswer);
+        setCurrentExplanation(storedAnswer.explanation);
+      }
+    } else {
+      setCurrentCorrectAnswer(null);
+      setCurrentExplanation("");
+    }
   };
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setSelectedAnswer(answers[currentIndex - 1]);
-      setShowExplanation(answers[currentIndex - 1] !== null);
+      const prevIndex = currentIndex - 1;
+      setCurrentIndex(prevIndex);
+      setSelectedAnswer(answers[prevIndex]);
+      setShowExplanation(answers[prevIndex] !== null);
+      // Restore explanation if already answered
+      if (answers[prevIndex] !== null && questions[prevIndex]) {
+        const storedAnswer = questionAnswers.get(questions[prevIndex].id);
+        if (storedAnswer) {
+          setCurrentCorrectAnswer(storedAnswer.correctAnswer);
+          setCurrentExplanation(storedAnswer.explanation);
+        }
+      } else {
+        setCurrentCorrectAnswer(null);
+        setCurrentExplanation("");
+      }
     }
   };
 
@@ -149,7 +259,9 @@ const PracticeTest = () => {
     setCurrentIndex(0);
     setSelectedAnswer(null);
     setShowExplanation(false);
-    setAnswers(Array(40).fill(null));
+    setCurrentExplanation("");
+    setCurrentCorrectAnswer(null);
+    setAnswers(Array(questions.length).fill(null));
     setSkippedQuestions(new Set());
     setTimeLeft(45 * 60);
     setXpEarned(0);
@@ -158,8 +270,20 @@ const PracticeTest = () => {
     toast.success("Test reset successfully");
   };
 
+  // Helper to check if an answer is correct using stored answers
+  const isAnswerCorrect = (questionIndex: number, answer: number | null): boolean => {
+    if (answer === null) return false;
+    const question = questions[questionIndex];
+    if (!question) return false;
+    const storedAnswer = questionAnswers.get(question.id);
+    return storedAnswer?.correctAnswer === answer;
+  };
+
   const handleFinishTest = () => {
-    const score = answers.reduce((acc, answer, idx) => (answer === questions[idx]?.correctAnswer ? acc + 1 : acc), 0);
+    // Calculate score using the stored answers
+    const score = answers.reduce((acc, answer, idx) => {
+      return isAnswerCorrect(idx, answer) ? acc + 1 : acc;
+    }, 0);
 
     const passed = score >= 32; // 80% pass rate
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
@@ -172,7 +296,7 @@ const PracticeTest = () => {
         categoryBreakdown[q.category] = { correct: 0, total: 0 };
       }
       categoryBreakdown[q.category].total++;
-      if (answers[idx] === q.correctAnswer) {
+      if (isAnswerCorrect(idx, answers[idx])) {
         categoryBreakdown[q.category].correct++;
       }
     });
@@ -248,8 +372,53 @@ const PracticeTest = () => {
 
   const getQuestionStatus = (index: number) => {
     if (answers[index] === null) return skippedQuestions.has(index) ? "skipped" : "unanswered";
-    return answers[index] === questions[index].correctAnswer ? "correct" : "incorrect";
+    return isAnswerCorrect(index, answers[index]) ? "correct" : "incorrect";
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-6">
+        <div className="bg-card border-b sticky top-0 z-10 shadow-sm">
+          <div className="max-w-2xl mx-auto px-3 sm:px-4 py-2 sm:py-3">
+            <div className="flex items-center justify-between mb-2">
+              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-8 w-32" />
+            </div>
+            <Skeleton className="h-2 w-full" />
+          </div>
+        </div>
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          <Card>
+            <CardContent className="p-4 sm:p-6">
+              <Skeleton className="h-4 w-24 mb-2" />
+              <Skeleton className="h-8 w-full mb-4" />
+              <div className="space-y-3">
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+                <Skeleton className="h-14 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // No questions loaded
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="p-6 text-center">
+          <p className="text-muted-foreground mb-4">No questions available</p>
+          <Button onClick={() => navigate('/practice-selection')}>
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-6">
@@ -397,7 +566,7 @@ const PracticeTest = () => {
               <div className="space-y-2 sm:space-y-3">
                 {currentQuestion.options.map((option, idx) => {
                   const isSelected = selectedAnswer === idx;
-                  const isCorrect = idx === currentQuestion.correctAnswer;
+                  const isCorrect = currentCorrectAnswer !== null && idx === currentCorrectAnswer;
                   const showCorrect = showExplanation && isCorrect;
                   const showIncorrect = showExplanation && isSelected && !isCorrect;
 
@@ -436,10 +605,10 @@ const PracticeTest = () => {
             </RadioGroup>
 
             {/* Explanation */}
-            {showExplanation && (
+            {showExplanation && currentExplanation && (
               <div className="mt-4 sm:mt-6 p-3 sm:p-4 rounded-lg bg-muted animate-slide-up">
                 <h3 className="font-semibold mb-2 text-sm sm:text-base">Explanation</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground">{currentQuestion.explanation}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground">{currentExplanation}</p>
               </div>
             )}
 
@@ -498,7 +667,7 @@ const PracticeTest = () => {
         <div className="mt-3 sm:mt-4 text-center">
           <div className="inline-flex items-center gap-3 text-xs sm:text-sm px-4 py-2 rounded-lg bg-muted/50">
             <span className="font-medium">
-              {answers.filter((a, i) => a === questions[i]?.correctAnswer).length} correct
+              {answers.filter((a, i) => isAnswerCorrect(i, a)).length} correct
             </span>
             <span className="text-muted-foreground">•</span>
             <span className="font-medium">{answers.filter((a) => a !== null).length} answered</span>
@@ -508,7 +677,7 @@ const PracticeTest = () => {
                 <span
                   className={cn(
                     "font-semibold",
-                    answers.filter((a, i) => a === questions[i]?.correctAnswer).length /
+                    answers.filter((a, i) => isAnswerCorrect(i, a)).length /
                       answers.filter((a) => a !== null).length >=
                       0.8
                       ? "text-success"
@@ -516,7 +685,7 @@ const PracticeTest = () => {
                   )}
                 >
                   {Math.round(
-                    (answers.filter((a, i) => a === questions[i]?.correctAnswer).length /
+                    (answers.filter((a, i) => isAnswerCorrect(i, a)).length /
                       answers.filter((a) => a !== null).length) *
                       100,
                   )}

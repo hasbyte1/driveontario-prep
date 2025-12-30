@@ -31,6 +31,8 @@ func main() {
 		routes.RegisterStripeRoutes(app, se)
 		routes.RegisterLeaderboardRoutes(app, se)
 		routes.RegisterProgressRoutes(app, se)
+		routes.RegisterQuestionRoutes(app, se)
+		routes.RegisterSeedRoutes(app, se)
 
 		// Serves static files from the provided public dir (if exists)
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
