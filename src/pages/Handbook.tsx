@@ -15,9 +15,7 @@ import {
   Users,
   Shield,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import ReactMarkdown from "react-markdown";
 import { handbookTopics, type HandbookTopic } from "../data/handbookTopics";
 
 const HighlightedText = ({ text, searchQuery }: { text: string; searchQuery: string }) => {
@@ -31,11 +29,11 @@ const HighlightedText = ({ text, searchQuery }: { text: string; searchQuery: str
     <>
       {parts.map((part, index) =>
         part.toLowerCase() === searchQuery.toLowerCase() ? (
-          <mark key={index} className="bg-yellow-300 dark:bg-yellow-600 text-foreground rounded px-0.5">
+          <mark key={`${searchQuery}-highlighted-${index}`} className="bg-yellow-300 dark:bg-yellow-600 text-foreground rounded px-0.5">
             {part}
           </mark>
         ) : (
-          <span key={index}>{part}</span>
+          <span key={`${searchQuery}-unhighlighted-${index}`}>{part}</span>
         ),
       )}
     </>
@@ -69,30 +67,39 @@ const RenderIcon = ({ iconName }: { iconName: string }) => {
   }
 };
 
+const queryTopic = (topic: HandbookTopic, searchQuery: string): (HandbookTopic | null) => {
+  if (!searchQuery) return null;
+  const query = searchQuery.toLowerCase();
+  const matchingSections = (topic.sections || []).filter(
+    (section) =>
+      section.name.toLowerCase().includes(query) ||
+      section.keywords.some((keyword) => keyword.toLowerCase().includes(query)) ||
+      section.description?.toLowerCase?.()?.includes?.(query) ||
+      section.content?.toLowerCase?.()?.includes?.(query) ||
+      section.topics?.some(
+        (stopic) =>
+          stopic.title.toLowerCase().includes(query) ||
+          stopic.points?.some((point) => point.toLowerCase().includes(query)),
+      ),
+  );
+  const hasTopic = topic.description.includes(query) || topic.title.includes(query);
+  if (hasTopic || matchingSections.length > 0) {
+    return {
+      ...topic,
+      sections: matchingSections,
+    };
+  }
+  return null;
+};
+
 const Handbook = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredTopics = handbookTopics
-    .map((topic) => {
-      if (!searchQuery) return topic;
-
-      const query = searchQuery.toLowerCase();
-      const matchingSections = topic.sections.filter(
-        (section) =>
-          section.name.toLowerCase().includes(query) ||
-          section.keywords.some((keyword) => keyword.toLowerCase().includes(query)) ||
-          section.description?.toLowerCase?.()?.includes?.(query) ||
-          section.topics?.some(
-            (stopic) =>
-              stopic.title.toLowerCase().includes(query) ||
-              stopic.points?.some((point) => point.toLowerCase().includes(query)),
-          ),
-      );
-
-      return matchingSections.length > 0 ? { ...topic, sections: matchingSections } : null;
-    })
-    .filter(Boolean) as HandbookTopic[];
+  const filteredTopics: HandbookTopic[] = handbookTopics.map((topic) => {
+    if (!searchQuery) return topic;
+    return queryTopic(topic, searchQuery);
+  }).filter(Boolean);
 
   const openOfficialHandbook = () => {
     window.open("https://www.ontario.ca/document/official-mto-drivers-handbook", "_blank");
@@ -175,68 +182,12 @@ const Handbook = () => {
             </Card>
           ) : (
             filteredTopics.map((topic, index) => (
-              <Card
-                key={topic.title}
-                className="animate-slide-up hover:shadow-lg transition-shadow"
-                style={{ animationDelay: `${0.1 + index * 0.05}s` }}
-              >
-                <CardHeader className="p-4 sm:p-6">
-                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
-                    <RenderIcon iconName={topic.icon} />
-                    {topic.title}
-                  </CardTitle>
-                  <CardDescription className="text-xs sm:text-sm">{topic.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="p-4 sm:p-6 pt-0">
-                  <Accordion type="single" collapsible className="space-y-2">
-                    {topic.sections.map((section, sectionIndex) => (
-                      <AccordionItem
-                        key={section.name}
-                        value={`${topic.title}-${sectionIndex}`}
-                        className="border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors px-3"
-                      >
-                        <AccordionTrigger className="text-xs sm:text-sm font-medium hover:no-underline py-3">
-                          <div className="flex items-center justify-between w-full pr-2">
-                            <span>{section.name}</span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent className="text-xs sm:text-sm text-muted-foreground pb-3 pt-1">
-                          <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
-                            <p className="font-bold">
-                              <HighlightedText text={section.description} searchQuery={searchQuery} />
-                            </p>
-                            {section.topics.map((stopic) => (
-                              <div key={"section_topic__" + topic.title + "__" + section.name + "__" + stopic.title}>
-                                <p>
-                                  <HighlightedText text={stopic.title} searchQuery={searchQuery} />
-                                </p>
-                                <ul>
-                                  {stopic.points.map((point, pointIndex) => (
-                                    <li
-                                      key={
-                                        "section_topic_point__" +
-                                        topic.title +
-                                        "__" +
-                                        section.name +
-                                        "__" +
-                                        stopic.title +
-                                        "__" +
-                                        pointIndex
-                                      }
-                                    >
-                                      <HighlightedText text={point} searchQuery={searchQuery} />
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
+              <Topic
+                key={`${index}-${topic.title}`}
+                index={index}
+                searchQuery={searchQuery}
+                topic={topic}
+              />
             ))
           )}
         </div>
@@ -254,5 +205,81 @@ const Handbook = () => {
     </div>
   );
 };
+
+function Topic(
+  { index, searchQuery, topic }:
+  Readonly<{ index: number; searchQuery: string; topic: HandbookTopic }>
+) {
+  return (
+    <Card
+      className="animate-slide-up hover:shadow-lg transition-shadow"
+      style={{ animationDelay: `${0.1 + index * 0.05}s` }}
+    >
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+          <RenderIcon iconName={topic.icon} />
+          <HighlightedText text={topic.title || ''} searchQuery={searchQuery} />
+        </CardTitle>
+        <CardDescription className="text-xs sm:text-sm">
+          <HighlightedText text={topic.description || ''} searchQuery={searchQuery} />
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-4 sm:p-6 pt-0">
+        <Accordion type="single" collapsible className="space-y-2">
+          {topic.sections.map((section, sectionIndex) => (
+            <AccordionItem
+              key={section.name}
+              value={`${topic.title}-${sectionIndex}`}
+              className="border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors px-3"
+            >
+              <AccordionTrigger className="text-xs sm:text-sm font-medium hover:no-underline py-3">
+                <div className="flex items-center justify-between w-full pr-2">
+                  <span>{section.name}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="text-xs sm:text-sm text-muted-foreground pb-3 pt-1">
+                <div className="prose prose-sm dark:prose-invert max-w-none leading-relaxed">
+                  <p className="font-bold">
+                    <HighlightedText text={section.description || ''} searchQuery={searchQuery} />
+                  </p>
+                  <div>
+                    <p className="font-normal">
+                      <HighlightedText text={section.content || ''} searchQuery={searchQuery} />
+                    </p>
+                  </div>
+                  {(section.topics || []).map((stopic) => (
+                    <div key={"section_topic__" + topic.title + "__" + section.name + "__" + stopic.title}>
+                      <p>
+                        <HighlightedText text={stopic.title || ''} searchQuery={searchQuery} />
+                      </p>
+                      <ul>
+                        {stopic.points.map((point, pointIndex) => (
+                          <li
+                            key={
+                              "section_topic_point__" +
+                              topic.title +
+                              "__" +
+                              section.name +
+                              "__" +
+                              stopic.title +
+                              "__" +
+                              pointIndex
+                            }
+                          >
+                            <HighlightedText text={point || ''} searchQuery={searchQuery} />
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default Handbook;
