@@ -1,6 +1,6 @@
 module driveprep
 
-go 1.23.4
+go 1.24.0
 
 require (
 	github.com/pocketbase/pocketbase v0.35.0
