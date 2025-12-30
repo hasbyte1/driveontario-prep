@@ -6,8 +6,13 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getTestQuestions, validateAnswer, type Question } from "@/lib/questions-api";
-import { getLocalQuestionWithAnswer } from "@/lib/questions-api";
+import {
+  startTestSession,
+  submitTestAnswer,
+  completeTestSession,
+  getLocalQuestionWithAnswer,
+  type Question
+} from "@/lib/questions-api";
 import {
   getStoredProgress,
   saveProgress,
@@ -62,17 +67,26 @@ const PracticeTest = () => {
 
   const currentQuestion = questions[currentIndex];
 
-  // Load questions on mount
+  // Load questions on mount using test session API
   useEffect(() => {
     const loadQuestions = async () => {
       setIsLoading(true);
       try {
-        const result = await getTestQuestions();
+        // Start a new test session (uses server API with anti-cheat)
+        const result = await startTestSession(category);
+        if (!result) {
+          throw new Error('Failed to start test session');
+        }
+
         setQuestions(result.questions);
         setSessionId(result.sessionId);
         setAnswers(Array(result.questions.length).fill(null));
 
-        // Pre-load local answers for fallback
+        // Set time limit from server (or default 45 min)
+        const timeLimitSeconds = Math.floor(result.timeLimit / 1000);
+        setTimeLeft(Math.min(timeLimitSeconds, 45 * 60));
+
+        // Pre-load local answers for fallback (only used if backend unavailable)
         const answersMap = new Map<string, { correctAnswer: number; explanation: string }>();
         for (const q of result.questions) {
           const localQ = getLocalQuestionWithAnswer(q.id);
@@ -93,7 +107,7 @@ const PracticeTest = () => {
       }
     };
     loadQuestions();
-  }, [navigate]);
+  }, [navigate, category]);
 
   // Timer - only run after questions are loaded
   useEffect(() => {
@@ -139,8 +153,14 @@ const PracticeTest = () => {
     // Calculate time spent on this question
     const timeSpent = Date.now() - questionStartTimeRef.current;
 
-    // Validate answer (uses API or falls back to local)
-    const validation = await validateAnswer(currentQuestion.id, selectedAnswer, timeSpent);
+    // Submit answer to test session API (server-authoritative XP)
+    const validation = await submitTestAnswer(
+      sessionId || '',
+      currentQuestion.id,
+      currentIndex,
+      selectedAnswer,
+      timeSpent
+    );
 
     // Store the correct answer and explanation for display
     setCurrentCorrectAnswer(validation.correctAnswer);
@@ -158,12 +178,11 @@ const PracticeTest = () => {
 
     const isCorrect = validation.correct;
 
-    // Calculate XP for this answer
-    let answerXp = 0;
+    // XP is now calculated server-side
+    const answerXp = validation.xpEarned;
+
     if (isFirstAnswer) {
-      answerXp += XP_REWARDS.QUESTION_COMPLETE;
       if (isCorrect) {
-        answerXp += XP_REWARDS.CORRECT_ANSWER;
         setCurrentStreak(prev => prev + 1);
       } else {
         setCurrentStreak(0);
@@ -182,6 +201,9 @@ const PracticeTest = () => {
             <span className="flex items-center gap-1 text-xs bg-primary/20 px-2 py-0.5 rounded-full">
               <Zap className="w-3 h-3" />+{answerXp} XP
             </span>
+          )}
+          {validation.flagged && (
+            <span className="text-xs text-amber-500">(timing flagged)</span>
           )}
         </div>
       );
@@ -279,36 +301,60 @@ const PracticeTest = () => {
     return storedAnswer?.correctAnswer === answer;
   };
 
-  const handleFinishTest = () => {
-    // Calculate score using the stored answers
-    const score = answers.reduce((acc, answer, idx) => {
-      return isAnswerCorrect(idx, answer) ? acc + 1 : acc;
-    }, 0);
+  const handleFinishTest = async () => {
+    // Try to complete test via server API first
+    const serverResults = sessionId ? await completeTestSession(sessionId) : null;
 
-    const passed = score >= 32; // 80% pass rate
-    const timeSpent = Math.round((Date.now() - startTime) / 1000);
-    const isPerfect = score === questions.length;
+    let score: number;
+    let passed: boolean;
+    let timeSpent: number;
+    let totalTestXp: number;
+    let categoryBreakdown: Record<string, { correct: number; total: number }>;
+    let isPerfect: boolean;
 
-    // Calculate category breakdown
-    const categoryBreakdown: Record<string, { correct: number; total: number }> = {};
-    questions.forEach((q, idx) => {
-      if (!categoryBreakdown[q.category]) {
-        categoryBreakdown[q.category] = { correct: 0, total: 0 };
+    if (serverResults) {
+      // Use server-authoritative results
+      score = serverResults.score;
+      passed = serverResults.passed;
+      timeSpent = serverResults.timeSpent;
+      totalTestXp = serverResults.xpEarned;
+      categoryBreakdown = serverResults.categoryBreakdown;
+      isPerfect = score === serverResults.totalQuestions;
+
+      if (serverResults.flagged) {
+        toast.warning(`Test completed with reduced XP: ${serverResults.flagReason || 'Suspicious activity detected'}`);
       }
-      categoryBreakdown[q.category].total++;
-      if (isAnswerCorrect(idx, answers[idx])) {
-        categoryBreakdown[q.category].correct++;
-      }
-    });
+    } else {
+      // Fallback to local calculation (for offline mode)
+      score = answers.reduce((acc, answer, idx) => {
+        return isAnswerCorrect(idx, answer) ? acc + 1 : acc;
+      }, 0);
 
-    // Calculate total XP for this test
-    let totalTestXp = xpEarned; // XP already earned from individual questions
-    totalTestXp += XP_REWARDS.TEST_COMPLETE;
-    if (passed) totalTestXp += XP_REWARDS.TEST_PASS;
-    if (isPerfect) totalTestXp += XP_REWARDS.PERFECT_SCORE;
+      passed = score >= 32; // 80% pass rate
+      timeSpent = Math.round((Date.now() - startTime) / 1000);
+      isPerfect = score === questions.length;
+
+      // Calculate category breakdown locally
+      categoryBreakdown = {};
+      questions.forEach((q, idx) => {
+        if (!categoryBreakdown[q.category]) {
+          categoryBreakdown[q.category] = { correct: 0, total: 0 };
+        }
+        categoryBreakdown[q.category].total++;
+        if (isAnswerCorrect(idx, answers[idx])) {
+          categoryBreakdown[q.category].correct++;
+        }
+      });
+
+      // Calculate total XP locally (fallback)
+      totalTestXp = xpEarned;
+      totalTestXp += XP_REWARDS.TEST_COMPLETE;
+      if (passed) totalTestXp += XP_REWARDS.TEST_PASS;
+      if (isPerfect) totalTestXp += XP_REWARDS.PERFECT_SCORE;
+    }
 
     const testResult: TestResult = {
-      id: Date.now().toString(),
+      id: sessionId || Date.now().toString(),
       date: new Date().toISOString(),
       score,
       totalQuestions: questions.length,
@@ -318,6 +364,8 @@ const PracticeTest = () => {
       xpEarned: totalTestXp,
     };
 
+    // Update local progress cache
+    // Note: When using server, XP is already updated there, but we still track locally for offline access
     let progress = getStoredProgress();
     progress.questionsCompleted += questions.length;
     progress.questionsCorrect += score;
@@ -332,9 +380,11 @@ const PracticeTest = () => {
       progress.categoryProgress[cat].total += stats.total;
     });
 
-    // Update XP
-    progress.xp += totalTestXp;
-    progress.totalXpEarned += totalTestXp;
+    // Only update XP locally if we're in offline/local mode (no server results)
+    if (!serverResults) {
+      progress.xp += totalTestXp;
+      progress.totalXpEarned += totalTestXp;
+    }
 
     // Update correct streak tracking
     progress.bestCorrectStreak = Math.max(progress.bestCorrectStreak, currentStreak);
@@ -344,7 +394,7 @@ const PracticeTest = () => {
       progress.fastestTestTime = timeSpent;
     }
 
-    // Update daily challenges
+    // Update daily challenges (local tracking)
     const questionsResult = updateDailyChallengeProgress(progress, 'questions', questions.length);
     progress = questionsResult.progress;
 

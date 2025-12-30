@@ -34,6 +34,38 @@ export interface ValidateResponse {
   correctAnswer: number;
   explanation: string;
   xpEarned: number;
+  flagged?: boolean;
+}
+
+export interface TestStartResponse {
+  sessionId: string;
+  questions: Question[];
+  count: number;
+  timeLimit: number;
+}
+
+export interface TestAnswerResponse {
+  correct: boolean;
+  correctAnswer: number;
+  explanation: string;
+  xpEarned: number;
+  flagged?: boolean;
+}
+
+export interface CategoryScore {
+  correct: number;
+  total: number;
+}
+
+export interface TestCompleteResponse {
+  score: number;
+  totalQuestions: number;
+  passed: boolean;
+  timeSpent: number;
+  xpEarned: number;
+  categoryBreakdown: Record<string, CategoryScore>;
+  flagged?: boolean;
+  flagReason?: string;
 }
 
 // Check if backend is configured and available
@@ -269,6 +301,139 @@ export function getLocalQuestionWithAnswer(questionId: string): QuestionWithAnsw
     correctAnswer: question.correctAnswer,
     explanation: question.explanation,
   };
+}
+
+// ============================================
+// Test Session API (Server-Authoritative)
+// ============================================
+
+/**
+ * Start a new test session
+ */
+export async function startTestSession(category?: string): Promise<TestStartResponse | null> {
+  if (!isBackendAvailable() || !pb.authStore.isValid) {
+    // Fallback to old method for offline/local mode
+    const result = await getTestQuestions();
+    return {
+      sessionId: `local-${Date.now()}`,
+      questions: result.questions,
+      count: result.questions.length,
+      timeLimit: 60 * 60 * 1000, // 60 minutes
+    };
+  }
+
+  try {
+    const response = await fetch(`${pb.baseURL}/api/test/start`, {
+      method: 'POST',
+      headers: {
+        'Authorization': pb.authStore.token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ category }),
+    });
+
+    if (!response.ok) throw new Error('Failed to start test session');
+    return await response.json();
+  } catch (error) {
+    console.error('Error starting test session:', error);
+    return null;
+  }
+}
+
+/**
+ * Submit an answer during a test session
+ */
+export async function submitTestAnswer(
+  sessionId: string,
+  questionId: string,
+  questionIndex: number,
+  selectedAnswer: number,
+  timeSpent: number
+): Promise<TestAnswerResponse> {
+  // For local sessions, use local validation
+  if (sessionId.startsWith('local-') || !isBackendAvailable() || !pb.authStore.isValid) {
+    return validateAnswer(questionId, selectedAnswer, timeSpent);
+  }
+
+  try {
+    const response = await fetch(`${pb.baseURL}/api/test/answer`, {
+      method: 'POST',
+      headers: {
+        'Authorization': pb.authStore.token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        sessionId,
+        questionId,
+        questionIndex,
+        selectedAnswer,
+        timeSpent,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to submit answer');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    // Fallback to local validation
+    return validateAnswer(questionId, selectedAnswer, timeSpent);
+  }
+}
+
+/**
+ * Complete a test session and get results
+ */
+export async function completeTestSession(sessionId: string): Promise<TestCompleteResponse | null> {
+  // For local sessions, return null (handled by frontend)
+  if (sessionId.startsWith('local-') || !isBackendAvailable() || !pb.authStore.isValid) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${pb.baseURL}/api/test/complete`, {
+      method: 'POST',
+      headers: {
+        'Authorization': pb.authStore.token,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ sessionId }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to complete test');
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error completing test:', error);
+    return null;
+  }
+}
+
+/**
+ * Get test results by session ID
+ */
+export async function getTestResults(sessionId: string): Promise<TestCompleteResponse | null> {
+  if (sessionId.startsWith('local-') || !isBackendAvailable() || !pb.authStore.isValid) {
+    return null;
+  }
+
+  try {
+    const response = await fetch(`${pb.baseURL}/api/test/results/${sessionId}`, {
+      headers: {
+        'Authorization': pb.authStore.token,
+      },
+    });
+
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching test results:', error);
+    return null;
+  }
 }
 
 // Re-export categories for convenience
