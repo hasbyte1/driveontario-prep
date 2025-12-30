@@ -4,19 +4,22 @@ import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { CATEGORIES, getQuestionsByCategory } from "@/data/questions";
 import { getStoredProgress, saveProgress } from "@/utils/storage";
-import { 
-  ArrowLeft, 
-  Play, 
-  RotateCcw, 
-  SignpostBig, 
-  Car, 
-  Shield, 
-  Wine, 
-  FileText, 
+import { usePremium } from "@/contexts/PremiumContext";
+import { PaywallBanner } from "@/components/PaywallModal";
+import {
+  ArrowLeft,
+  Play,
+  RotateCcw,
+  SignpostBig,
+  Car,
+  Shield,
+  Wine,
+  FileText,
   MoreHorizontal,
   Timer,
   Sparkles,
-  CheckCircle
+  CheckCircle,
+  Crown
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -64,6 +67,8 @@ const categoryInfo = {
 const PracticeSelection = () => {
   const navigate = useNavigate();
   const progress = getStoredProgress();
+  const { isPremium, getRemainingTests, incrementTestCount, triggerPaywall, canAccessFeature } = usePremium();
+  const remainingTests = getRemainingTests();
 
   const handleResetCategory = (category: string) => {
     const updatedProgress = { ...progress };
@@ -75,6 +80,15 @@ const PracticeSelection = () => {
   };
 
   const handleStartPractice = (category?: string) => {
+    // Check test limit for free users
+    if (!canAccessFeature('testsPerDay')) {
+      triggerPaywall('tests');
+      return;
+    }
+
+    // Increment test count for free users
+    incrementTestCount();
+
     const params = new URLSearchParams();
     if (category) params.set("category", category);
     navigate(`/practice?${params.toString()}`);
@@ -100,6 +114,16 @@ const PracticeSelection = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Daily Limit Warning */}
+        {!isPremium && remainingTests <= 1 && (
+          <div className="mb-4">
+            <PaywallBanner
+              feature="tests"
+              message={remainingTests === 0 ? "You've used all your free tests today" : `Only ${remainingTests} test remaining today`}
+            />
+          </div>
+        )}
+
         {/* Full Test Option */}
         <Card className="mb-6 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent animate-slide-up">
           <CardContent className="p-6">

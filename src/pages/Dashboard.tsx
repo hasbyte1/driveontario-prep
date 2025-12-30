@@ -6,6 +6,8 @@ import { StatCard } from "@/components/StatCard";
 import { ProgressBar } from "@/components/ProgressBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Progress } from "@/components/ui/progress";
+import { PaywallBanner, PremiumBadge } from "@/components/PaywallModal";
+import { usePremium, FREE_LIMITS } from "@/contexts/PremiumContext";
 import {
   getStoredProgress,
   updateStreak,
@@ -16,16 +18,18 @@ import {
   generateDailyChallenges,
   ALL_BADGES,
   TIER_COLORS,
-  type DailyChallenge,
 } from "@/utils/storage";
 import { getTotalQuestions } from "@/data/questions";
-import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award, Lock, Target, Zap, Star, Calendar } from "lucide-react";
+import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award, Target, Zap, Star, Calendar, Crown } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(getStoredProgress());
   const totalQuestions = getTotalQuestions();
+  const { isPremium, getRemainingQuestions, getRemainingTests, triggerPaywall } = usePremium();
+  const remainingQuestions = getRemainingQuestions();
+  const remainingTests = getRemainingTests();
 
   useEffect(() => {
     let updatedProgress = updateStreak(progress);
@@ -112,16 +116,35 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pb-20">
       <InstallPrompt />
       {/* Header with Level & XP */}
-      <div className="bg-gradient-to-br from-primary to-secondary p-4 sm:p-6 text-primary-foreground">
+      <div className={`p-4 sm:p-6 text-primary-foreground ${isPremium ? 'bg-gradient-to-br from-yellow-500 to-orange-500' : 'bg-gradient-to-br from-primary to-secondary'}`}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Ontario DrivePrep</h1>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl sm:text-3xl font-bold">Ontario DrivePrep</h1>
+                {isPremium && (
+                  <span className="inline-flex items-center gap-1 text-xs bg-white/20 px-2 py-0.5 rounded-full">
+                    <Crown className="w-3 h-3" /> PRO
+                  </span>
+                )}
+              </div>
               <p className="text-sm sm:text-base text-primary-foreground/80">Master your G1 knowledge test</p>
             </div>
             <div className="text-right">
-              <div className="text-3xl sm:text-4xl mb-1">{level.icon}</div>
-              <div className="text-xs sm:text-sm font-semibold">Level {level.level}</div>
+              {isPremium ? (
+                <div className="text-3xl sm:text-4xl mb-1">👑</div>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="bg-white/20 hover:bg-white/30 text-white border-0"
+                  onClick={() => navigate('/premium')}
+                >
+                  <Crown className="w-4 h-4 mr-1" />
+                  Upgrade
+                </Button>
+              )}
+              <div className="text-xs sm:text-sm font-semibold mt-1">{level.icon} Level {level.level}</div>
             </div>
           </div>
 
@@ -191,6 +214,35 @@ const Dashboard = () => {
             variant="success"
           />
         </div>
+
+        {/* Daily Limits (Free Users) */}
+        {!isPremium && (
+          <Card className="mb-4 sm:mb-6 animate-slide-up" style={{ animationDelay: "0.05s" }}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold">{remainingQuestions}</p>
+                    <p className="text-[10px] text-muted-foreground">Questions left</p>
+                  </div>
+                  <div className="h-8 w-px bg-border" />
+                  <div className="text-center">
+                    <p className="text-2xl font-bold">{remainingTests}</p>
+                    <p className="text-[10px] text-muted-foreground">Tests left</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                  onClick={() => navigate('/premium')}
+                >
+                  <Crown className="w-4 h-4 mr-1" />
+                  Go Unlimited
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Daily Challenges */}
         {progress.dailyChallenges.length > 0 && (
