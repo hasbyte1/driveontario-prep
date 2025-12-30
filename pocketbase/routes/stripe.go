@@ -15,7 +15,7 @@ import (
 	"github.com/stripe/stripe-go/v76/webhook"
 )
 
-// Stripe price IDs - these should be set in environment variables
+// Stripe price IDs - ONLY set via environment variables (never from client)
 var (
 	priceMonthly  = os.Getenv("STRIPE_PRICE_MONTHLY")
 	priceYearly   = os.Getenv("STRIPE_PRICE_YEARLY")
@@ -28,10 +28,9 @@ func init() {
 }
 
 // CheckoutRequest represents the request body for creating a checkout session
+// Note: No priceId or userId - these are determined server-side for security
 type CheckoutRequest struct {
 	Plan       string `json:"plan"`
-	UserID     string `json:"userId"`
-	PriceID    string `json:"priceId"`
 	SuccessURL string `json:"successUrl"`
 	CancelURL  string `json:"cancelUrl"`
 }
@@ -50,11 +49,18 @@ type SubscriptionStatus struct {
 	CancelAtPeriodEnd bool   `json:"cancelAtPeriodEnd"`
 }
 
+// CustomerPortalRequest represents the request for customer portal
+type CustomerPortalRequest struct {
+	ReturnURL string `json:"returnUrl"`
+}
+
 // RegisterStripeRoutes registers all Stripe-related API routes
 func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 	// Create checkout session
+	// POST /api/stripe/create-checkout
+	// Body: { plan: "monthly"|"yearly"|"lifetime", successUrl, cancelUrl }
+	// Security: User ID from auth token, price ID from server config
 	se.Router.POST("/api/stripe/create-checkout", func(e *core.RequestEvent) error {
-		// Verify authentication
 		authRecord := e.Auth
 		if authRecord == nil {
 			return e.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
@@ -65,7 +71,7 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 			return e.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request body"})
 		}
 
-		// Get the price ID based on plan
+		// Get the price ID from SERVER config based on plan (never from client)
 		var priceID string
 		var mode stripe.CheckoutSessionMode
 
@@ -84,7 +90,12 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 		}
 
 		if priceID == "" {
-			return e.JSON(http.StatusInternalServerError, map[string]string{"error": "Price not configured"})
+			return e.JSON(http.StatusInternalServerError, map[string]string{"error": "Price not configured for this plan"})
+		}
+
+		// Validate URLs (basic security check)
+		if req.SuccessURL == "" || req.CancelURL == "" {
+			return e.JSON(http.StatusBadRequest, map[string]string{"error": "Success and cancel URLs required"})
 		}
 
 		// Check if user already has a Stripe customer ID
@@ -101,13 +112,14 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 					Quantity: stripe.Int64(1),
 				},
 			},
+			// Store user info in metadata for webhook processing
 			Metadata: map[string]string{
-				"userId": req.UserID,
+				"userId": authRecord.Id,
 				"plan":   req.Plan,
 			},
 		}
 
-		// Use existing customer or create new one
+		// Use existing customer or set email for new customer
 		if customerID != "" {
 			params.Customer = stripe.String(customerID)
 		} else {
@@ -126,29 +138,34 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 		})
 	}).Bind(RequireAuth(app))
 
-	// Get subscription status
-	se.Router.GET("/api/stripe/subscription-status/{userId}", func(e *core.RequestEvent) error {
+	// Get subscription status for authenticated user
+	// GET /api/stripe/subscription-status
+	// Security: Returns status for authenticated user only
+	se.Router.GET("/api/stripe/subscription-status", func(e *core.RequestEvent) error {
 		authRecord := e.Auth
 		if authRecord == nil {
 			return e.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		userID := e.Request.PathValue("userId")
-		if userID != authRecord.Id {
-			return e.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden"})
-		}
-
-		// Get subscription from database
+		// Get subscription from database for authenticated user
 		subscriptions, err := app.FindRecordsByFilter(
 			"subscriptions",
 			"user = {:userId} && status = 'active'",
 			"-created",
 			1,
 			0,
-			map[string]any{"userId": userID},
+			map[string]any{"userId": authRecord.Id},
 		)
 
 		if err != nil || len(subscriptions) == 0 {
+			// Check if user has premium flag (for lifetime purchases)
+			if authRecord.GetBool("isPremium") {
+				return e.JSON(http.StatusOK, SubscriptionStatus{
+					Active:            true,
+					Plan:              authRecord.GetString("premiumPlan"),
+					CancelAtPeriodEnd: false,
+				})
+			}
 			return e.JSON(http.StatusOK, SubscriptionStatus{
 				Active: false,
 				Plan:   "free",
@@ -160,40 +177,31 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 			Active:            true,
 			Plan:              sub.GetString("plan"),
 			ExpiresAt:         sub.GetDateTime("currentPeriodEnd").String(),
-			CancelAtPeriodEnd: false,
+			CancelAtPeriodEnd: sub.GetString("status") == "cancelled",
 		})
 	}).Bind(RequireAuth(app))
 
-	// Cancel subscription
+	// Cancel subscription for authenticated user
+	// POST /api/stripe/cancel-subscription
+	// Security: Cancels subscription for authenticated user only
 	se.Router.POST("/api/stripe/cancel-subscription", func(e *core.RequestEvent) error {
 		authRecord := e.Auth
 		if authRecord == nil {
 			return e.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		var req struct {
-			UserID string `json:"userId"`
-		}
-		if err := e.BindBody(&req); err != nil {
-			return e.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
-		}
-
-		if req.UserID != authRecord.Id {
-			return e.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden"})
-		}
-
-		// Get user's subscription
+		// Get user's active subscription
 		subscriptions, err := app.FindRecordsByFilter(
 			"subscriptions",
 			"user = {:userId} && status = 'active'",
 			"-created",
 			1,
 			0,
-			map[string]any{"userId": req.UserID},
+			map[string]any{"userId": authRecord.Id},
 		)
 
 		if err != nil || len(subscriptions) == 0 {
-			return e.JSON(http.StatusNotFound, map[string]string{"error": "No active subscription"})
+			return e.JSON(http.StatusNotFound, map[string]string{"error": "No active subscription found"})
 		}
 
 		sub := subscriptions[0]
@@ -215,32 +223,16 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 			return e.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update subscription"})
 		}
 
-		// Update user premium status
-		authRecord.Set("isPremium", false)
-		authRecord.Set("premiumPlan", "free")
-		if err := app.Save(authRecord); err != nil {
-			return e.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to update user"})
-		}
-
 		return e.JSON(http.StatusOK, map[string]string{"status": "cancelled"})
 	}).Bind(RequireAuth(app))
 
-	// Resume subscription
+	// Resume subscription for authenticated user
+	// POST /api/stripe/resume-subscription
+	// Security: Resumes subscription for authenticated user only
 	se.Router.POST("/api/stripe/resume-subscription", func(e *core.RequestEvent) error {
 		authRecord := e.Auth
 		if authRecord == nil {
 			return e.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
-		}
-
-		var req struct {
-			UserID string `json:"userId"`
-		}
-		if err := e.BindBody(&req); err != nil {
-			return e.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
-		}
-
-		if req.UserID != authRecord.Id {
-			return e.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden"})
 		}
 
 		// Get user's cancelled subscription
@@ -250,11 +242,11 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 			"-created",
 			1,
 			0,
-			map[string]any{"userId": req.UserID},
+			map[string]any{"userId": authRecord.Id},
 		)
 
 		if err != nil || len(subscriptions) == 0 {
-			return e.JSON(http.StatusNotFound, map[string]string{"error": "No cancelled subscription"})
+			return e.JSON(http.StatusNotFound, map[string]string{"error": "No cancelled subscription found"})
 		}
 
 		sub := subscriptions[0]
@@ -286,28 +278,28 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 		return e.JSON(http.StatusOK, map[string]string{"status": "resumed"})
 	}).Bind(RequireAuth(app))
 
-	// Customer portal
+	// Customer portal for authenticated user
+	// POST /api/stripe/customer-portal
+	// Body: { returnUrl }
+	// Security: Opens portal for authenticated user only
 	se.Router.POST("/api/stripe/customer-portal", func(e *core.RequestEvent) error {
 		authRecord := e.Auth
 		if authRecord == nil {
 			return e.JSON(http.StatusUnauthorized, map[string]string{"error": "Unauthorized"})
 		}
 
-		var req struct {
-			UserID    string `json:"userId"`
-			ReturnURL string `json:"returnUrl"`
-		}
+		var req CustomerPortalRequest
 		if err := e.BindBody(&req); err != nil {
 			return e.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid request"})
 		}
 
-		if req.UserID != authRecord.Id {
-			return e.JSON(http.StatusForbidden, map[string]string{"error": "Forbidden"})
-		}
-
 		customerID := authRecord.GetString("stripeCustomerId")
 		if customerID == "" {
-			return e.JSON(http.StatusBadRequest, map[string]string{"error": "No Stripe customer"})
+			return e.JSON(http.StatusBadRequest, map[string]string{"error": "No Stripe customer found"})
+		}
+
+		if req.ReturnURL == "" {
+			return e.JSON(http.StatusBadRequest, map[string]string{"error": "Return URL required"})
 		}
 
 		// Create billing portal session
@@ -325,6 +317,8 @@ func RegisterStripeRoutes(app core.App, se *core.ServeEvent) {
 	}).Bind(RequireAuth(app))
 
 	// Stripe webhook handler
+	// POST /api/stripe/webhook
+	// Security: Verified by Stripe signature
 	se.Router.POST("/api/stripe/webhook", func(e *core.RequestEvent) error {
 		body, err := io.ReadAll(e.Request.Body)
 		if err != nil {

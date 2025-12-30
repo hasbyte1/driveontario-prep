@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { pb, User } from '@/lib/pocketbase';
-import { redirectToCheckout, cancelSubscription, isDemoMode, demoCheckout, isStripeConfigured } from '@/lib/stripe';
+import { redirectToCheckout, cancelSubscription, isDemoMode, demoCheckout, isBackendConfigured } from '@/lib/stripe';
 
 // Premium feature limits
 export const FREE_LIMITS = {
@@ -260,16 +260,15 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     setIsProcessing(true);
 
     try {
-      // Check if we have a real backend and Stripe configured
-      if (pb.authStore.isValid && isStripeConfigured()) {
-        const user = pb.authStore.record as User;
-        const success = await redirectToCheckout(plan as 'monthly' | 'yearly' | 'lifetime', user.id);
+      // Check if we have a real backend configured
+      if (pb.authStore.isValid && isBackendConfigured()) {
+        const success = await redirectToCheckout(plan as 'monthly' | 'yearly' | 'lifetime');
         setIsProcessing(false);
         return success;
       }
 
       // Demo mode: simulate upgrade locally
-      if (isDemoMode() || !isStripeConfigured()) {
+      if (isDemoMode() || !isBackendConfigured()) {
         await demoCheckout(plan as 'monthly' | 'yearly' | 'lifetime');
 
         let expiresAt: string | null = null;
@@ -310,9 +309,8 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     try {
       // If authenticated with backend
-      if (pb.authStore.isValid && isStripeConfigured()) {
-        const user = pb.authStore.record as User;
-        const success = await cancelSubscription(user.id);
+      if (pb.authStore.isValid && isBackendConfigured()) {
+        const success = await cancelSubscription();
         if (success) {
           setState(prev => ({
             ...prev,

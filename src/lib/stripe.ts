@@ -1,35 +1,4 @@
-import { loadStripe, Stripe } from '@stripe/stripe-js';
 import { pb } from './pocketbase';
-
-// Stripe public key from environment
-const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY || '';
-
-// Initialize Stripe
-let stripePromise: Promise<Stripe | null> | null = null;
-
-export const getStripe = (): Promise<Stripe | null> => {
-  if (!STRIPE_PUBLIC_KEY) {
-    console.warn('Stripe public key not configured');
-    return Promise.resolve(null);
-  }
-
-  if (!stripePromise) {
-    stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
-  }
-  return stripePromise;
-};
-
-// Check if Stripe is configured
-export const isStripeConfigured = (): boolean => {
-  return !!STRIPE_PUBLIC_KEY;
-};
-
-// Pricing IDs (set these in your Stripe dashboard)
-export const STRIPE_PRICES = {
-  monthly: import.meta.env.VITE_STRIPE_PRICE_MONTHLY || 'price_monthly',
-  yearly: import.meta.env.VITE_STRIPE_PRICE_YEARLY || 'price_yearly',
-  lifetime: import.meta.env.VITE_STRIPE_PRICE_LIFETIME || 'price_lifetime',
-} as const;
 
 export type PlanType = 'monthly' | 'yearly' | 'lifetime';
 
@@ -45,19 +14,21 @@ interface SubscriptionStatus {
   cancelAtPeriodEnd: boolean;
 }
 
+// Check if backend is configured (has a real Pocketbase URL)
+export const isBackendConfigured = (): boolean => {
+  return !!pb.baseURL && !pb.baseURL.includes('localhost:8090');
+};
+
 /**
- * Create a Stripe checkout session for a subscription
- * This calls a Pocketbase function/webhook that creates the session
+ * Create a Stripe checkout session
+ * Backend handles all Stripe configuration - frontend only sends plan name
  */
 export const createCheckoutSession = async (
   plan: PlanType,
-  userId: string,
   successUrl: string = `${window.location.origin}/premium?success=true`,
   cancelUrl: string = `${window.location.origin}/premium?cancelled=true`
 ): Promise<CheckoutSessionResponse | null> => {
   try {
-    // Call Pocketbase API to create checkout session
-    // This should be a custom endpoint that creates the Stripe session server-side
     const response = await fetch(`${pb.baseURL}/api/stripe/create-checkout`, {
       method: 'POST',
       headers: {
@@ -66,19 +37,18 @@ export const createCheckoutSession = async (
       },
       body: JSON.stringify({
         plan,
-        userId,
-        priceId: STRIPE_PRICES[plan],
         successUrl,
         cancelUrl,
       }),
     });
 
     if (!response.ok) {
-      throw new Error('Failed to create checkout session');
+      const error = await response.json().catch(() => ({ error: 'Unknown error' }));
+      console.error('Checkout error:', error);
+      throw new Error(error.error || 'Failed to create checkout session');
     }
 
-    const data = await response.json();
-    return data as CheckoutSessionResponse;
+    return await response.json();
   } catch (error) {
     console.error('Error creating checkout session:', error);
     return null;
@@ -87,47 +57,35 @@ export const createCheckoutSession = async (
 
 /**
  * Redirect to Stripe checkout
+ * Returns true if redirect initiated, false on error
  */
-export const redirectToCheckout = async (plan: PlanType, userId: string): Promise<boolean> => {
-  const stripe = await getStripe();
-  if (!stripe) {
-    console.error('Stripe not initialized');
+export const redirectToCheckout = async (plan: PlanType): Promise<boolean> => {
+  if (!pb.authStore.isValid) {
+    console.error('User must be logged in to checkout');
     return false;
   }
 
-  const session = await createCheckoutSession(plan, userId);
-  if (!session) {
+  const session = await createCheckoutSession(plan);
+  if (!session?.url) {
+    console.error('Failed to create checkout session');
     return false;
   }
 
-  if (!session.url) {
-    console.error('Stripe session url is invalid:', session);
-    return false
-  }
-
-  // Redirect to Stripe checkout
+  // Redirect to Stripe-hosted checkout page
   window.location.href = session.url;
-
-  // https://docs.stripe.com/changelog/clover/2025-09-30/remove-redirect-to-checkout
-  // Below code is commented because `redirectToCheckout` has been removed from the library
-  // const { error } = await stripe.redirectToCheckout({
-  //   sessionId: session.sessionId,
-  // });
-
-  // if (error) {
-  //   console.error('Stripe redirect error:', error);
-  //   return false;
-  // }
-
   return true;
 };
 
 /**
- * Get the current subscription status for a user
+ * Get the current subscription status for the authenticated user
  */
-export const getSubscriptionStatus = async (userId: string): Promise<SubscriptionStatus | null> => {
+export const getSubscriptionStatus = async (): Promise<SubscriptionStatus | null> => {
+  if (!pb.authStore.isValid) {
+    return null;
+  }
+
   try {
-    const response = await fetch(`${pb.baseURL}/api/stripe/subscription-status/${userId}`, {
+    const response = await fetch(`${pb.baseURL}/api/stripe/subscription-status`, {
       headers: {
         'Authorization': pb.authStore.token || '',
       },
@@ -145,9 +103,13 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
 };
 
 /**
- * Cancel a subscription
+ * Cancel the current subscription
  */
-export const cancelSubscription = async (userId: string): Promise<boolean> => {
+export const cancelSubscription = async (): Promise<boolean> => {
+  if (!pb.authStore.isValid) {
+    return false;
+  }
+
   try {
     const response = await fetch(`${pb.baseURL}/api/stripe/cancel-subscription`, {
       method: 'POST',
@@ -155,7 +117,6 @@ export const cancelSubscription = async (userId: string): Promise<boolean> => {
         'Content-Type': 'application/json',
         'Authorization': pb.authStore.token || '',
       },
-      body: JSON.stringify({ userId }),
     });
 
     return response.ok;
@@ -168,7 +129,11 @@ export const cancelSubscription = async (userId: string): Promise<boolean> => {
 /**
  * Resume a cancelled subscription (before it expires)
  */
-export const resumeSubscription = async (userId: string): Promise<boolean> => {
+export const resumeSubscription = async (): Promise<boolean> => {
+  if (!pb.authStore.isValid) {
+    return false;
+  }
+
   try {
     const response = await fetch(`${pb.baseURL}/api/stripe/resume-subscription`, {
       method: 'POST',
@@ -176,7 +141,6 @@ export const resumeSubscription = async (userId: string): Promise<boolean> => {
         'Content-Type': 'application/json',
         'Authorization': pb.authStore.token || '',
       },
-      body: JSON.stringify({ userId }),
     });
 
     return response.ok;
@@ -187,9 +151,13 @@ export const resumeSubscription = async (userId: string): Promise<boolean> => {
 };
 
 /**
- * Open customer portal for subscription management
+ * Open Stripe customer portal for subscription management
  */
-export const openCustomerPortal = async (userId: string): Promise<boolean> => {
+export const openCustomerPortal = async (): Promise<boolean> => {
+  if (!pb.authStore.isValid) {
+    return false;
+  }
+
   try {
     const response = await fetch(`${pb.baseURL}/api/stripe/customer-portal`, {
       method: 'POST',
@@ -198,7 +166,6 @@ export const openCustomerPortal = async (userId: string): Promise<boolean> => {
         'Authorization': pb.authStore.token || '',
       },
       body: JSON.stringify({
-        userId,
         returnUrl: window.location.href,
       }),
     });
@@ -216,13 +183,13 @@ export const openCustomerPortal = async (userId: string): Promise<boolean> => {
   }
 };
 
-// Demo mode functions for testing without Stripe
-export const demoCheckout = async (plan: PlanType): Promise<boolean> => {
+// Demo mode functions for testing without backend
+export const demoCheckout = async (_plan: PlanType): Promise<boolean> => {
   // Simulate checkout delay
   await new Promise(resolve => setTimeout(resolve, 1500));
   return true;
 };
 
 export const isDemoMode = (): boolean => {
-  return !isStripeConfigured();
+  return !isBackendConfigured();
 };
