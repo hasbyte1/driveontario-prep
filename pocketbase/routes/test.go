@@ -11,10 +11,10 @@ import (
 
 // Test session constants
 const (
-	MinTimePerQuestion = 2000               // 2 seconds minimum per question
-	MaxTestDuration    = 60 * 60 * 1000     // 60 minutes max for a test
-	MaxAnswersPerMin   = 30                 // Max answers per minute (anti-bot)
-	SuspiciousPerfect  = 10                 // Flag if >10 perfect answers in a row under 3s each
+	MinTimePerQuestion = 2000           // 2 seconds minimum per question
+	MaxTestDuration    = 60 * 60 * 1000 // 60 minutes max for a test
+	MaxAnswersPerMin   = 30             // Max answers per minute (anti-bot)
+	SuspiciousPerfect  = 10             // Flag if >10 perfect answers in a row under 3s each
 )
 
 // XP reward constants
@@ -65,14 +65,14 @@ type TestCompleteRequest struct {
 
 // TestCompleteResponse represents the test results
 type TestCompleteResponse struct {
-	Score             int                        `json:"score"`
-	TotalQuestions    int                        `json:"totalQuestions"`
-	Passed            bool                       `json:"passed"`
-	TimeSpent         int                        `json:"timeSpent"` // seconds
-	XPEarned          int                        `json:"xpEarned"`
-	CategoryBreakdown map[string]CategoryScore   `json:"categoryBreakdown"`
-	Flagged           bool                       `json:"flagged,omitempty"`
-	FlagReason        string                     `json:"flagReason,omitempty"`
+	Score             int                      `json:"score"`
+	TotalQuestions    int                      `json:"totalQuestions"`
+	Passed            bool                     `json:"passed"`
+	TimeSpent         int                      `json:"timeSpent"` // seconds
+	XPEarned          int                      `json:"xpEarned"`
+	CategoryBreakdown map[string]CategoryScore `json:"categoryBreakdown"`
+	Flagged           bool                     `json:"flagged,omitempty"`
+	FlagReason        string                   `json:"flagReason,omitempty"`
 }
 
 // CategoryScore represents score breakdown per category

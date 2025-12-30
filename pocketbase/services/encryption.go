@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	ErrInvalidKey       = errors.New("invalid encryption key: must be 32 bytes (64 hex chars)")
-	ErrInvalidCiphertext = errors.New("invalid ciphertext")
+	ErrInvalidKey         = errors.New("invalid encryption key: must be 32 bytes (64 hex chars)")
+	ErrInvalidCiphertext  = errors.New("invalid ciphertext")
 	ErrEncryptionDisabled = errors.New("encryption is disabled (no key configured)")
 )
 

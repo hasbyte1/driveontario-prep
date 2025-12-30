@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { pb, User, clearAuth, getCurrentUser, isAuthenticated } from '@/lib/pocketbase';
-import { getStoredProgress, saveProgress, type UserProgress as LocalProgress } from '@/utils/storage';
+import { getStoredProgress, saveProgress, type UserProgress as LocalProgress, ALL_BADGES } from '@/utils/storage';
+import { initializeProgressSync, syncProgress as apiSyncProgress } from '@/lib/progress-api';
 import { toast } from 'sonner';
 
 interface AuthContextType {
@@ -43,6 +44,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // Refresh auth token
           await pb.collection('users').authRefresh();
           setUser(getCurrentUser());
+
+          // Initialize progress sync on app load (sync, update streak, check badges)
+          const syncResult = await initializeProgressSync();
+
+          // Show notifications for new achievements
+          if (syncResult.streakUpdated && syncResult.xpEarned > 0) {
+            toast.success(`Welcome back! +${syncResult.xpEarned} XP for daily login`);
+          }
+
+          if (syncResult.newBadges.length > 0) {
+            for (const badgeId of syncResult.newBadges) {
+              const badge = ALL_BADGES[badgeId];
+              if (badge) {
+                toast.success(`${badge.icon} Badge Earned: ${badge.name}!`, {
+                  description: `+${badge.xpReward} XP`,
+                });
+              }
+            }
+          }
         }
       } catch (error) {
         console.error('Auth refresh failed:', error);
@@ -244,33 +264,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!user || isDemoMode) return;
 
     try {
-      const localProgress = getStoredProgress();
+      // Use the new progress API for full sync with server authority
+      const syncResult = await initializeProgressSync();
 
-      // Merge local progress with server progress (take highest values)
-      const serverUser = await pb.collection('users').getOne(user.id);
+      if (syncResult.synced) {
+        // Refresh user data from local storage (which was updated by sync)
+        const localProgress = getStoredProgress();
+        setUser(prev => prev ? {
+          ...prev,
+          xp: localProgress.xp,
+          streak: localProgress.streak,
+          longestStreak: localProgress.longestStreak,
+          questionsCompleted: localProgress.questionsCompleted,
+          questionsCorrect: localProgress.questionsCorrect,
+          badges: localProgress.badges,
+        } : null);
 
-      const mergedData = {
-        xp: Math.max(localProgress.xp, serverUser.xp || 0),
-        streak: Math.max(localProgress.streak, serverUser.streak || 0),
-        longestStreak: Math.max(localProgress.longestStreak, serverUser.longestStreak || 0),
-        questionsCompleted: Math.max(localProgress.questionsCompleted, serverUser.questionsCompleted || 0),
-        questionsCorrect: Math.max(localProgress.questionsCorrect, serverUser.questionsCorrect || 0),
-        badges: [...new Set([...localProgress.badges, ...(serverUser.badges || [])])],
-      };
+        // Show notifications for achievements earned during sync
+        if (syncResult.streakUpdated && syncResult.xpEarned > 0) {
+          toast.success(`+${syncResult.xpEarned} XP for daily streak!`);
+        }
 
-      // Update server
-      await pb.collection('users').update(user.id, mergedData);
-
-      // Update local storage with merged data
-      const updatedLocal: LocalProgress = {
-        ...localProgress,
-        ...mergedData,
-      };
-      saveProgress(updatedLocal);
-
-      setUser(prev => prev ? { ...prev, ...mergedData } : null);
+        if (syncResult.newBadges.length > 0) {
+          for (const badgeId of syncResult.newBadges) {
+            const badge = ALL_BADGES[badgeId];
+            if (badge) {
+              toast.success(`${badge.icon} Badge Earned: ${badge.name}!`, {
+                description: `+${badge.xpReward} XP`,
+              });
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error('Progress sync failed:', error);
+      // Fallback to basic sync if new API fails
+      try {
+        await apiSyncProgress();
+      } catch (fallbackError) {
+        console.error('Fallback sync also failed:', fallbackError);
+      }
     }
   };
 
