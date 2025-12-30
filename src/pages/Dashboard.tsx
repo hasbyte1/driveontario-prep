@@ -6,10 +6,13 @@ import { StatCard } from "@/components/StatCard";
 import { ProgressBar } from "@/components/ProgressBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PaywallBanner, PremiumBadge } from "@/components/PaywallModal";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { ShareButton } from "@/components/ShareButton";
 import { usePremium, FREE_LIMITS } from "@/contexts/PremiumContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { fetchLeaderboard, LeaderboardEntry } from "@/lib/leaderboard";
 import {
   getStoredProgress,
   updateStreak,
@@ -22,17 +25,33 @@ import {
   TIER_COLORS,
 } from "@/utils/storage";
 import { getTotalQuestions } from "@/data/questions";
-import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award, Target, Zap, Star, Calendar, Crown } from "lucide-react";
+import { BookOpen, Brain, Trophy, Flame, CheckCircle, ArrowRight, Award, Target, Zap, Star, Calendar, Crown, Medal, Users } from "lucide-react";
 import { toast } from "sonner";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(getStoredProgress());
+  const [topLeaders, setTopLeaders] = useState<LeaderboardEntry[]>([]);
+  const [userRank, setUserRank] = useState<number | undefined>();
   const totalQuestions = getTotalQuestions();
   const { isPremium, getRemainingQuestions, getRemainingTests, triggerPaywall } = usePremium();
   const { user } = useAuth();
   const remainingQuestions = getRemainingQuestions();
   const remainingTests = getRemainingTests();
+
+  // Fetch leaderboard preview
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      try {
+        const data = await fetchLeaderboard('weekly', 5);
+        setTopLeaders(data.entries.slice(0, 3));
+        setUserRank(data.userRank);
+      } catch (error) {
+        console.error('Failed to load leaderboard:', error);
+      }
+    };
+    loadLeaderboard();
+  }, []);
 
   useEffect(() => {
     let updatedProgress = updateStreak(progress);
@@ -423,6 +442,85 @@ const Dashboard = () => {
           </Card>
         )}
 
+        {/* Leaderboard Preview */}
+        {topLeaders.length > 0 && (
+          <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-purple-500/5 to-indigo-500/5 border-purple-500/20 animate-slide-up" style={{ animationDelay: "0.25s" }}>
+            <CardHeader className="p-4 sm:p-6 pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-500" />
+                  Leaderboard
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => navigate('/leaderboard')}
+                >
+                  View All
+                  <ArrowRight className="w-3 h-3 ml-1" />
+                </Button>
+              </div>
+              <CardDescription className="text-xs sm:text-sm">
+                This week's top performers
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-2 space-y-2">
+              {topLeaders.map((leader, index) => (
+                <div
+                  key={leader.id}
+                  className={`flex items-center gap-3 p-2 rounded-lg ${
+                    leader.isCurrentUser ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50'
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center ${
+                    index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-600' :
+                    index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-500' :
+                    'bg-gradient-to-br from-amber-600 to-amber-800'
+                  }`}>
+                    {index === 0 ? <Crown className="w-3.5 h-3.5 text-white" /> :
+                     index === 1 ? <Medal className="w-3.5 h-3.5 text-white" /> :
+                     <Award className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <Avatar className="h-8 w-8 border-2 border-background">
+                    <AvatarImage src={leader.avatar} />
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                      {leader.name.slice(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium truncate ${leader.isCurrentUser ? 'text-primary' : ''}`}>
+                      {leader.name}
+                      {leader.isCurrentUser && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold">{leader.xp.toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground">XP</p>
+                  </div>
+                </div>
+              ))}
+              {userRank && userRank > 3 && (
+                <div className="pt-2 border-t border-dashed">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Your Rank</span>
+                    <span className="font-bold text-primary">#{userRank}</span>
+                  </div>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => navigate('/leaderboard')}
+              >
+                <Users className="w-4 h-4 mr-2" />
+                View Full Leaderboard
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Daily Tip */}
         <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-accent/5 to-transparent border-accent/20 animate-slide-up" style={{ animationDelay: "0.3s" }}>
           <CardHeader className="p-4 sm:p-6">
@@ -432,7 +530,7 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             <p className="text-xs sm:text-sm">
-              Always check your blind spots before changing lanes. Mirrors alone don't show the full picture. 
+              Always check your blind spots before changing lanes. Mirrors alone don't show the full picture.
               A quick shoulder check can prevent accidents.
             </p>
           </CardContent>
@@ -440,30 +538,45 @@ const Dashboard = () => {
 
         {/* Secondary Action Buttons */}
         <div className="space-y-3 sm:space-y-4 animate-slide-up" style={{ animationDelay: "0.4s" }}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-            <Button 
-              variant="outline" 
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            <Button
+              variant="outline"
               className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2"
               onClick={() => navigate("/flashcards")}
             >
               <BookOpen className="w-4 h-4 sm:w-5 sm:h-5" />
-              Study Flashcards
+              Flashcards
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
             </Button>
-            
-            <Button 
-              variant="outline" 
+
+            <Button
+              variant="outline"
               className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2"
               onClick={() => navigate("/progress")}
             >
-              <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
-              View Detailed Progress
+              <Target className="w-4 h-4 sm:w-5 sm:h-5" />
+              Progress
               <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
             </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2"
+              onClick={() => navigate("/leaderboard")}
+            >
+              <Trophy className="w-4 h-4 sm:w-5 sm:h-5" />
+              Leaderboard
+              <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-auto" />
+            </Button>
+
+            <ShareButton
+              variant="outline"
+              className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2"
+            />
           </div>
 
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full h-12 sm:h-14 text-sm sm:text-base gap-2 border-primary/30 hover:bg-primary/5"
             onClick={() => navigate("/handbook")}
           >

@@ -15,6 +15,7 @@ import Flashcards from "./pages/Flashcards";
 import Progress from "./pages/Progress";
 import Handbook from "./pages/Handbook";
 import Premium from "./pages/Premium";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/progress" element={<Progress />} />
               <Route path="/handbook" element={<Handbook />} />
               <Route path="/premium" element={<Premium />} />
+              <Route path="/leaderboard" element={<Leaderboard />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
