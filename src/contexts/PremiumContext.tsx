@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { pb, User } from '@/lib/pocketbase';
+import { redirectToCheckout, cancelSubscription, isDemoMode, demoCheckout, isStripeConfigured } from '@/lib/stripe';
 
 // Premium feature limits
 export const FREE_LIMITS = {
@@ -56,6 +58,9 @@ interface PremiumState {
   questionsToday: number;
   testsToday: number;
   lastResetDate: string;
+  // Sync status
+  isSyncing: boolean;
+  lastSyncedAt: string | null;
 }
 
 interface PremiumContextType {
@@ -66,12 +71,14 @@ interface PremiumContextType {
   getRemainingTests: () => number;
   incrementQuestionCount: () => void;
   incrementTestCount: () => void;
-  upgradeToPremium: (plan: PlanType) => void;
-  cancelPremium: () => void;
+  upgradeToPremium: (plan: PlanType) => Promise<boolean>;
+  cancelPremium: () => Promise<boolean>;
   showPaywall: boolean;
   setShowPaywall: (show: boolean) => void;
   paywallFeature: string | null;
   triggerPaywall: (feature: string) => void;
+  syncPremiumStatus: () => Promise<void>;
+  isProcessing: boolean;
 }
 
 const PREMIUM_STORAGE_KEY = 'ontario_driveprep_premium';
@@ -83,6 +90,8 @@ const getDefaultState = (): PremiumState => ({
   questionsToday: 0,
   testsToday: 0,
   lastResetDate: new Date().toISOString().split('T')[0],
+  isSyncing: false,
+  lastSyncedAt: null,
 });
 
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
@@ -99,6 +108,74 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallFeature, setPaywallFeature] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Sync premium status from backend
+  const syncPremiumStatus = useCallback(async () => {
+    if (!pb.authStore.isValid) return;
+
+    setState(prev => ({ ...prev, isSyncing: true }));
+
+    try {
+      const user = pb.authStore.model as User;
+      if (user) {
+        const isPremium = user.isPremium || false;
+        const plan = (user.premiumPlan as PlanType) || 'free';
+        const expiresAt = user.premiumExpiresAt || null;
+
+        setState(prev => ({
+          ...prev,
+          isPremium,
+          plan,
+          expiresAt,
+          isSyncing: false,
+          lastSyncedAt: new Date().toISOString(),
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to sync premium status:', error);
+      setState(prev => ({ ...prev, isSyncing: false }));
+    }
+  }, []);
+
+  // Listen for auth changes
+  useEffect(() => {
+    const unsubscribe = pb.authStore.onChange((token, model) => {
+      if (model) {
+        const user = model as User;
+        setState(prev => ({
+          ...prev,
+          isPremium: user.isPremium || false,
+          plan: (user.premiumPlan as PlanType) || 'free',
+          expiresAt: user.premiumExpiresAt || null,
+        }));
+      } else {
+        // User logged out, keep local state but mark as not premium if it came from backend
+        if (state.lastSyncedAt) {
+          setState(prev => ({
+            ...prev,
+            isPremium: false,
+            plan: 'free',
+            expiresAt: null,
+            lastSyncedAt: null,
+          }));
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [state.lastSyncedAt]);
+
+  // Check URL params for successful checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === 'true') {
+      // Checkout was successful, sync status
+      syncPremiumStatus();
+      // Clean up URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [syncPremiumStatus]);
 
   // Reset daily counts if it's a new day
   useEffect(() => {
@@ -179,36 +256,89 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  const upgradeToPremium = (plan: PlanType) => {
-    let expiresAt: string | null = null;
+  const upgradeToPremium = async (plan: PlanType): Promise<boolean> => {
+    setIsProcessing(true);
 
-    if (plan === 'monthly') {
-      const date = new Date();
-      date.setMonth(date.getMonth() + 1);
-      expiresAt = date.toISOString();
-    } else if (plan === 'yearly') {
-      const date = new Date();
-      date.setFullYear(date.getFullYear() + 1);
-      expiresAt = date.toISOString();
+    try {
+      // Check if we have a real backend and Stripe configured
+      if (pb.authStore.isValid && isStripeConfigured()) {
+        const user = pb.authStore.model as User;
+        const success = await redirectToCheckout(plan as 'monthly' | 'yearly' | 'lifetime', user.id);
+        setIsProcessing(false);
+        return success;
+      }
+
+      // Demo mode: simulate upgrade locally
+      if (isDemoMode() || !isStripeConfigured()) {
+        await demoCheckout(plan as 'monthly' | 'yearly' | 'lifetime');
+
+        let expiresAt: string | null = null;
+
+        if (plan === 'monthly') {
+          const date = new Date();
+          date.setMonth(date.getMonth() + 1);
+          expiresAt = date.toISOString();
+        } else if (plan === 'yearly') {
+          const date = new Date();
+          date.setFullYear(date.getFullYear() + 1);
+          expiresAt = date.toISOString();
+        }
+        // lifetime has no expiry
+
+        setState(prev => ({
+          ...prev,
+          isPremium: true,
+          plan,
+          expiresAt,
+        }));
+        setShowPaywall(false);
+        setIsProcessing(false);
+        return true;
+      }
+
+      setIsProcessing(false);
+      return false;
+    } catch (error) {
+      console.error('Upgrade failed:', error);
+      setIsProcessing(false);
+      return false;
     }
-    // lifetime has no expiry
-
-    setState(prev => ({
-      ...prev,
-      isPremium: true,
-      plan,
-      expiresAt,
-    }));
-    setShowPaywall(false);
   };
 
-  const cancelPremium = () => {
-    setState(prev => ({
-      ...prev,
-      isPremium: false,
-      plan: 'free',
-      expiresAt: null,
-    }));
+  const cancelPremiumSubscription = async (): Promise<boolean> => {
+    setIsProcessing(true);
+
+    try {
+      // If authenticated with backend
+      if (pb.authStore.isValid && isStripeConfigured()) {
+        const user = pb.authStore.model as User;
+        const success = await cancelSubscription(user.id);
+        if (success) {
+          setState(prev => ({
+            ...prev,
+            isPremium: false,
+            plan: 'free',
+            expiresAt: null,
+          }));
+        }
+        setIsProcessing(false);
+        return success;
+      }
+
+      // Demo mode
+      setState(prev => ({
+        ...prev,
+        isPremium: false,
+        plan: 'free',
+        expiresAt: null,
+      }));
+      setIsProcessing(false);
+      return true;
+    } catch (error) {
+      console.error('Cancel failed:', error);
+      setIsProcessing(false);
+      return false;
+    }
   };
 
   const triggerPaywall = (feature: string) => {
@@ -227,11 +357,13 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
         incrementQuestionCount,
         incrementTestCount,
         upgradeToPremium,
-        cancelPremium,
+        cancelPremium: cancelPremiumSubscription,
         showPaywall,
         setShowPaywall,
         paywallFeature,
         triggerPaywall,
+        syncPremiumStatus,
+        isProcessing,
       }}
     >
       {children}

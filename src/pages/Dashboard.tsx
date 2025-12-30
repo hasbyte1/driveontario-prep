@@ -7,7 +7,9 @@ import { ProgressBar } from "@/components/ProgressBar";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Progress } from "@/components/ui/progress";
 import { PaywallBanner, PremiumBadge } from "@/components/PaywallModal";
+import { ProfileMenu } from "@/components/ProfileMenu";
 import { usePremium, FREE_LIMITS } from "@/contexts/PremiumContext";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getStoredProgress,
   updateStreak,
@@ -28,6 +30,7 @@ const Dashboard = () => {
   const [progress, setProgress] = useState(getStoredProgress());
   const totalQuestions = getTotalQuestions();
   const { isPremium, getRemainingQuestions, getRemainingTests, triggerPaywall } = usePremium();
+  const { user } = useAuth();
   const remainingQuestions = getRemainingQuestions();
   const remainingTests = getRemainingTests();
 
@@ -130,10 +133,8 @@ const Dashboard = () => {
               </div>
               <p className="text-sm sm:text-base text-primary-foreground/80">Master your G1 knowledge test</p>
             </div>
-            <div className="text-right">
-              {isPremium ? (
-                <div className="text-3xl sm:text-4xl mb-1">👑</div>
-              ) : (
+            <div className="flex items-center gap-2">
+              {!isPremium && (
                 <Button
                   size="sm"
                   variant="secondary"
@@ -144,7 +145,7 @@ const Dashboard = () => {
                   Upgrade
                 </Button>
               )}
-              <div className="text-xs sm:text-sm font-semibold mt-1">{level.icon} Level {level.level}</div>
+              <ProfileMenu variant="header" />
             </div>
           </div>
 

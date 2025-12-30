@@ -23,25 +23,33 @@ import { toast } from 'sonner';
 
 const Premium = () => {
   const navigate = useNavigate();
-  const { isPremium, state, upgradeToPremium, cancelPremium } = usePremium();
+  const { isPremium, state, upgradeToPremium, cancelPremium, isProcessing } = usePremium();
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly' | 'lifetime'>('lifetime');
-  const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePurchase = async () => {
-    setIsProcessing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    upgradeToPremium(selectedPlan);
-    toast.success('Welcome to Premium!', {
-      description: 'You now have access to all features.',
-    });
-    setIsProcessing(false);
+    const success = await upgradeToPremium(selectedPlan);
+    if (success) {
+      toast.success('Welcome to Premium!', {
+        description: 'You now have access to all features.',
+      });
+    } else {
+      toast.error('Purchase failed', {
+        description: 'Please try again or contact support.',
+      });
+    }
   };
 
-  const handleCancel = () => {
-    cancelPremium();
-    toast.info('Premium cancelled', {
-      description: 'You can re-subscribe anytime.',
-    });
+  const handleCancel = async () => {
+    const success = await cancelPremium();
+    if (success) {
+      toast.info('Premium cancelled', {
+        description: 'You can re-subscribe anytime.',
+      });
+    } else {
+      toast.error('Failed to cancel', {
+        description: 'Please try again or contact support.',
+      });
+    }
   };
 
   const formatDate = (dateStr: string) => {
