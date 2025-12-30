@@ -5,6 +5,8 @@ import (
 	"os"
 	"strings"
 
+	"driveprep/routes"
+
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -25,7 +27,12 @@ func main() {
 	})
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
-		// serves static files from the provided public dir (if exists)
+		// Register custom API routes
+		routes.RegisterStripeRoutes(app, se)
+		routes.RegisterLeaderboardRoutes(app, se)
+		routes.RegisterProgressRoutes(app, se)
+
+		// Serves static files from the provided public dir (if exists)
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
 
 		return se.Next()

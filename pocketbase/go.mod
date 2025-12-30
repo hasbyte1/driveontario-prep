@@ -1,8 +1,11 @@
 module driveprep
 
-go 1.25.4
+go 1.23.4
 
-require github.com/pocketbase/pocketbase v0.35.0
+require (
+	github.com/pocketbase/pocketbase v0.35.0
+	github.com/stripe/stripe-go/v76 v76.25.0
+)
 
 require (
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
