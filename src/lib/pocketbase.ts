@@ -1,4 +1,4 @@
-import PocketBase from 'pocketbase';
+import PocketBase, { RecordModel } from 'pocketbase';
 
 // Pocketbase client instance
 // In production, set VITE_POCKETBASE_URL environment variable
@@ -10,8 +10,7 @@ export const pb = new PocketBase(POCKETBASE_URL);
 pb.autoCancellation(false);
 
 // Types for our collections
-export interface User {
-  id: string;
+export interface User extends RecordModel {
   email: string;
   name: string;
   avatar?: string;
@@ -87,7 +86,7 @@ export const isAuthenticated = (): boolean => {
 // Helper to get current user
 export const getCurrentUser = (): User | null => {
   if (!pb.authStore.isValid) return null;
-  return pb.authStore.model as User;
+  return pb.authStore.record as User;
 };
 
 // Helper to clear auth

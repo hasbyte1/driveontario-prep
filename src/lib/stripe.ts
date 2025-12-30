@@ -58,7 +58,7 @@ export const createCheckoutSession = async (
   try {
     // Call Pocketbase API to create checkout session
     // This should be a custom endpoint that creates the Stripe session server-side
-    const response = await fetch(`${pb.baseUrl}/api/stripe/create-checkout`, {
+    const response = await fetch(`${pb.baseURL}/api/stripe/create-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,15 +100,24 @@ export const redirectToCheckout = async (plan: PlanType, userId: string): Promis
     return false;
   }
 
-  // Redirect to Stripe checkout
-  const { error } = await stripe.redirectToCheckout({
-    sessionId: session.sessionId,
-  });
-
-  if (error) {
-    console.error('Stripe redirect error:', error);
-    return false;
+  if (!session.url) {
+    console.error('Stripe session url is invalid:', session);
+    return false
   }
+
+  // Redirect to Stripe checkout
+  window.location.href = session.url;
+
+  // https://docs.stripe.com/changelog/clover/2025-09-30/remove-redirect-to-checkout
+  // Below code is commented because `redirectToCheckout` has been removed from the library
+  // const { error } = await stripe.redirectToCheckout({
+  //   sessionId: session.sessionId,
+  // });
+
+  // if (error) {
+  //   console.error('Stripe redirect error:', error);
+  //   return false;
+  // }
 
   return true;
 };
@@ -118,7 +127,7 @@ export const redirectToCheckout = async (plan: PlanType, userId: string): Promis
  */
 export const getSubscriptionStatus = async (userId: string): Promise<SubscriptionStatus | null> => {
   try {
-    const response = await fetch(`${pb.baseUrl}/api/stripe/subscription-status/${userId}`, {
+    const response = await fetch(`${pb.baseURL}/api/stripe/subscription-status/${userId}`, {
       headers: {
         'Authorization': pb.authStore.token || '',
       },
@@ -140,7 +149,7 @@ export const getSubscriptionStatus = async (userId: string): Promise<Subscriptio
  */
 export const cancelSubscription = async (userId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${pb.baseUrl}/api/stripe/cancel-subscription`, {
+    const response = await fetch(`${pb.baseURL}/api/stripe/cancel-subscription`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -161,7 +170,7 @@ export const cancelSubscription = async (userId: string): Promise<boolean> => {
  */
 export const resumeSubscription = async (userId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${pb.baseUrl}/api/stripe/resume-subscription`, {
+    const response = await fetch(`${pb.baseURL}/api/stripe/resume-subscription`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -182,7 +191,7 @@ export const resumeSubscription = async (userId: string): Promise<boolean> => {
  */
 export const openCustomerPortal = async (userId: string): Promise<boolean> => {
   try {
-    const response = await fetch(`${pb.baseUrl}/api/stripe/customer-portal`, {
+    const response = await fetch(`${pb.baseURL}/api/stripe/customer-portal`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

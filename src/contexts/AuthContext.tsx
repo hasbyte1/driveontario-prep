@@ -83,6 +83,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         badges: [],
         isPremium: false,
         premiumPlan: 'free',
+
+        collectionId: 'users',
+        collectionName: 'users'
       };
       setUser(demoUser);
       setShowAuthModal(false);
@@ -128,6 +131,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         badges: [],
         isPremium: false,
         premiumPlan: 'free',
+
+        collectionId: 'users',
+        collectionName: 'users'
       };
       setUser(demoUser);
       setShowAuthModal(false);

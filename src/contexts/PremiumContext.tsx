@@ -117,7 +117,7 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     setState(prev => ({ ...prev, isSyncing: true }));
 
     try {
-      const user = pb.authStore.model as User;
+      const user = pb.authStore.record as User;
       if (user) {
         const isPremium = user.isPremium || false;
         const plan = (user.premiumPlan as PlanType) || 'free';
@@ -262,7 +262,7 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     try {
       // Check if we have a real backend and Stripe configured
       if (pb.authStore.isValid && isStripeConfigured()) {
-        const user = pb.authStore.model as User;
+        const user = pb.authStore.record as User;
         const success = await redirectToCheckout(plan as 'monthly' | 'yearly' | 'lifetime', user.id);
         setIsProcessing(false);
         return success;
@@ -311,7 +311,7 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     try {
       // If authenticated with backend
       if (pb.authStore.isValid && isStripeConfigured()) {
-        const user = pb.authStore.model as User;
+        const user = pb.authStore.record as User;
         const success = await cancelSubscription(user.id);
         if (success) {
           setState(prev => ({
