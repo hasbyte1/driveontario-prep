@@ -29,7 +29,7 @@ func RegisterSeedRoutes(app core.App, se *core.ServeEvent) {
 	// Admin only: Seed questions from JSON
 	se.Router.POST("/api/admin/seed-questions", func(e *core.RequestEvent) error {
 		return handleSeedQuestions(app, e)
-	}).Bind(apis.RequireAuth(), requireAdmin(app))
+	}).Bind(apis.RequireAuth()).BindFunc(requireAdmin(app))
 }
 
 // requireAdmin is a middleware that checks if user is admin
