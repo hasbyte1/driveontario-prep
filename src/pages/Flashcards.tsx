@@ -1,15 +1,25 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { questions, CATEGORIES } from "@/data/questions";
-import { ArrowLeft, ArrowRight, RotateCw, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, RotateCw, CheckCircle, XCircle, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  getStoredProgress,
+  saveProgress,
+  updateDailyChallengeProgress,
+  XP_REWARDS,
+} from "@/utils/storage";
 
 const Flashcards = () => {
   const navigate = useNavigate();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showAnswer, setShowAnswer] = useState(false);
   const [knownCards, setKnownCards] = useState<Set<string>>(new Set());
+  const [xpEarned, setXpEarned] = useState(0);
+  const [cardsReviewed, setCardsReviewed] = useState(0);
+  const reviewedCardsRef = useRef<Set<string>>(new Set());
 
   const currentCard = questions[currentIndex];
 
@@ -34,11 +44,68 @@ const Flashcards = () => {
   };
 
   const handleKnowIt = () => {
+    const isNewMastery = !knownCards.has(currentCard.id);
     setKnownCards(new Set([...knownCards, currentCard.id]));
+
+    // Track review for daily challenge
+    if (!reviewedCardsRef.current.has(currentCard.id)) {
+      reviewedCardsRef.current.add(currentCard.id);
+      setCardsReviewed(prev => prev + 1);
+
+      // Update daily challenge progress
+      let progress = getStoredProgress();
+      const result = updateDailyChallengeProgress(progress, 'flashcards', 1);
+      progress = result.progress;
+
+      // Award XP for mastering a card
+      if (isNewMastery) {
+        const xp = XP_REWARDS.FLASHCARD_MASTERED;
+        setXpEarned(prev => prev + xp);
+        progress.xp += xp;
+        progress.totalXpEarned += xp;
+
+        toast.success(
+          <div className="flex items-center gap-2">
+            <span>Card mastered!</span>
+            <span className="flex items-center gap-1 text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+              <Zap className="w-3 h-3" />+{xp} XP
+            </span>
+          </div>
+        );
+      }
+
+      // Show challenge completion toast
+      result.completedChallenges.forEach(challenge => {
+        toast.success(`🎯 Challenge Complete: ${challenge.description}`, {
+          description: `+${challenge.xpReward} XP`,
+        });
+      });
+
+      saveProgress(progress);
+    }
+
     handleNext();
   };
 
   const handleDontKnow = () => {
+    // Still count as reviewed for daily challenge
+    if (!reviewedCardsRef.current.has(currentCard.id)) {
+      reviewedCardsRef.current.add(currentCard.id);
+      setCardsReviewed(prev => prev + 1);
+
+      let progress = getStoredProgress();
+      const result = updateDailyChallengeProgress(progress, 'flashcards', 1);
+      progress = result.progress;
+
+      result.completedChallenges.forEach(challenge => {
+        toast.success(`🎯 Challenge Complete: ${challenge.description}`, {
+          description: `+${challenge.xpReward} XP`,
+        });
+      });
+
+      saveProgress(progress);
+    }
+
     knownCards.delete(currentCard.id);
     setKnownCards(new Set(knownCards));
     handleNext();
@@ -174,8 +241,25 @@ const Flashcards = () => {
         </div>
 
         {/* Stats */}
-        <div className="mt-6 sm:mt-8 text-center text-xs sm:text-sm text-muted-foreground">
-          <p>Cards mastered: {knownCards.size} / {questions.length}</p>
+        <div className="mt-6 sm:mt-8 text-center">
+          <div className="inline-flex items-center gap-3 text-xs sm:text-sm px-4 py-2 rounded-lg bg-muted/50">
+            <span className="text-muted-foreground">
+              Cards mastered: <span className="font-medium text-foreground">{knownCards.size} / {questions.length}</span>
+            </span>
+            <span className="text-muted-foreground">•</span>
+            <span className="text-muted-foreground">
+              Reviewed: <span className="font-medium text-foreground">{cardsReviewed}</span>
+            </span>
+            {xpEarned > 0 && (
+              <>
+                <span className="text-muted-foreground">•</span>
+                <span className="flex items-center gap-1 font-semibold text-primary">
+                  <Zap className="w-3 h-3" />
+                  {xpEarned} XP
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </div>

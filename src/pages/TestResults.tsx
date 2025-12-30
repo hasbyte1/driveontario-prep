@@ -2,13 +2,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
-import { type TestResult } from "@/utils/storage";
-import { Trophy, RotateCcw, Home, TrendingUp } from "lucide-react";
+import { type TestResult, getStoredProgress, getLevel, XP_REWARDS } from "@/utils/storage";
+import { Trophy, RotateCcw, Home, TrendingUp, Zap, Star } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 const TestResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const testResult = location.state?.testResult as TestResult;
+  const totalXpEarned = location.state?.totalXpEarned as number | undefined;
 
   if (!testResult) {
     navigate("/");
@@ -17,6 +19,18 @@ const TestResults = () => {
 
   const percentage = Math.round((testResult.score / testResult.totalQuestions) * 100);
   const passed = testResult.passed;
+  const progress = getStoredProgress();
+  const level = getLevel(progress.xp);
+
+  // Calculate XP breakdown
+  const xpBreakdown = {
+    questions: testResult.totalQuestions * XP_REWARDS.QUESTION_COMPLETE,
+    correct: testResult.score * XP_REWARDS.CORRECT_ANSWER,
+    testComplete: XP_REWARDS.TEST_COMPLETE,
+    testPass: passed ? XP_REWARDS.TEST_PASS : 0,
+    perfect: testResult.score === testResult.totalQuestions ? XP_REWARDS.PERFECT_SCORE : 0,
+  };
+  const displayXp = totalXpEarned || testResult.xpEarned || Object.values(xpBreakdown).reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4">
@@ -52,14 +66,76 @@ const TestResults = () => {
                 {percentage}% correct
               </div>
             </div>
-            <ProgressBar 
-              current={testResult.score} 
+            <ProgressBar
+              current={testResult.score}
               total={testResult.totalQuestions}
               variant={passed ? "success" : "warning"}
               showLabel={false}
             />
             <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-center text-muted-foreground">
               Time: {Math.floor(testResult.timeSpent / 60)}:{(testResult.timeSpent % 60).toString().padStart(2, "0")}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* XP Earned Card */}
+        <Card className="mb-4 sm:mb-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20 animate-slide-up" style={{ animationDelay: "0.05s" }}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+              <Zap className="w-5 h-5 text-primary" />
+              XP Earned
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-3xl sm:text-4xl font-bold text-primary">
+                +{displayXp} XP
+              </div>
+              <div className="text-right">
+                <div className="text-2xl">{level.icon}</div>
+                <div className="text-xs text-muted-foreground">Level {level.level}</div>
+              </div>
+            </div>
+
+            {/* XP Breakdown */}
+            <div className="space-y-2 text-xs sm:text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <span>Questions answered ({testResult.totalQuestions})</span>
+                <span>+{xpBreakdown.questions} XP</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Correct answers ({testResult.score})</span>
+                <span>+{xpBreakdown.correct} XP</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Test completed</span>
+                <span>+{xpBreakdown.testComplete} XP</span>
+              </div>
+              {passed && (
+                <div className="flex justify-between text-success font-medium">
+                  <span>Test passed bonus</span>
+                  <span>+{xpBreakdown.testPass} XP</span>
+                </div>
+              )}
+              {testResult.score === testResult.totalQuestions && (
+                <div className="flex justify-between text-primary font-medium">
+                  <span>Perfect score bonus!</span>
+                  <span>+{xpBreakdown.perfect} XP</span>
+                </div>
+              )}
+            </div>
+
+            {/* Level Progress */}
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center justify-between mb-2 text-xs sm:text-sm">
+                <span className="font-medium">{level.name}</span>
+                {level.nextLevel && (
+                  <span className="text-muted-foreground">
+                    {level.xpForCurrentLevel}/{level.xpNeededForNext} to {level.nextLevel.name}
+                  </span>
+                )}
+              </div>
+              <Progress value={level.progress} className="h-2" />
             </div>
           </CardContent>
         </Card>

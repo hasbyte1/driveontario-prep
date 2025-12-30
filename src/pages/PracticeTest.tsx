@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,14 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { getRandomQuestions, CATEGORIES } from "@/data/questions";
-import { getStoredProgress, saveProgress, type TestResult } from "@/utils/storage";
-import { ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Home, SkipForward, Eye } from "lucide-react";
+import {
+  getStoredProgress,
+  saveProgress,
+  updateDailyChallengeProgress,
+  XP_REWARDS,
+  type TestResult,
+} from "@/utils/storage";
+import { ArrowRight, ArrowLeft, Clock, CheckCircle, XCircle, RotateCcw, Home, SkipForward, Eye, Zap } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -36,6 +42,9 @@ const PracticeTest = () => {
   const [skippedQuestions, setSkippedQuestions] = useState<Set<number>>(new Set());
   const [startTime] = useState(Date.now());
   const [timeLeft, setTimeLeft] = useState(45 * 60); // 45 minutes in seconds
+  const [xpEarned, setXpEarned] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
+  const hasAnsweredRef = useRef<Set<number>>(new Set());
 
   const currentQuestion = questions[currentIndex];
 
@@ -71,9 +80,36 @@ const PracticeTest = () => {
     setShowExplanation(true);
 
     const isCorrect = selectedAnswer === currentQuestion?.correctAnswer;
+    const isFirstAnswer = !hasAnsweredRef.current.has(currentIndex);
+    hasAnsweredRef.current.add(currentIndex);
+
+    // Calculate XP for this answer
+    let answerXp = 0;
+    if (isFirstAnswer) {
+      answerXp += XP_REWARDS.QUESTION_COMPLETE;
+      if (isCorrect) {
+        answerXp += XP_REWARDS.CORRECT_ANSWER;
+        setCurrentStreak(prev => prev + 1);
+      } else {
+        setCurrentStreak(0);
+      }
+    }
+
+    if (answerXp > 0) {
+      setXpEarned(prev => prev + answerXp);
+    }
 
     if (isCorrect) {
-      toast.success("Correct! 🎉");
+      toast.success(
+        <div className="flex items-center gap-2">
+          <span>Correct! 🎉</span>
+          {answerXp > 0 && (
+            <span className="flex items-center gap-1 text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+              <Zap className="w-3 h-3" />+{answerXp} XP
+            </span>
+          )}
+        </div>
+      );
     } else {
       toast.error("Incorrect");
     }
@@ -116,6 +152,9 @@ const PracticeTest = () => {
     setAnswers(Array(40).fill(null));
     setSkippedQuestions(new Set());
     setTimeLeft(45 * 60);
+    setXpEarned(0);
+    setCurrentStreak(0);
+    hasAnsweredRef.current = new Set();
     toast.success("Test reset successfully");
   };
 
@@ -124,6 +163,7 @@ const PracticeTest = () => {
 
     const passed = score >= 32; // 80% pass rate
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
+    const isPerfect = score === questions.length;
 
     // Calculate category breakdown
     const categoryBreakdown: Record<string, { correct: number; total: number }> = {};
@@ -137,6 +177,12 @@ const PracticeTest = () => {
       }
     });
 
+    // Calculate total XP for this test
+    let totalTestXp = xpEarned; // XP already earned from individual questions
+    totalTestXp += XP_REWARDS.TEST_COMPLETE;
+    if (passed) totalTestXp += XP_REWARDS.TEST_PASS;
+    if (isPerfect) totalTestXp += XP_REWARDS.PERFECT_SCORE;
+
     const testResult: TestResult = {
       id: Date.now().toString(),
       date: new Date().toISOString(),
@@ -145,25 +191,56 @@ const PracticeTest = () => {
       categoryBreakdown,
       timeSpent,
       passed,
+      xpEarned: totalTestXp,
     };
 
-    const progress = getStoredProgress();
+    let progress = getStoredProgress();
     progress.questionsCompleted += questions.length;
     progress.questionsCorrect += score;
     progress.testHistory.unshift(testResult);
 
     // Update category progress
-    Object.entries(categoryBreakdown).forEach(([category, stats]) => {
-      if (!progress.categoryProgress[category]) {
-        progress.categoryProgress[category] = { correct: 0, total: 0 };
+    Object.entries(categoryBreakdown).forEach(([cat, stats]) => {
+      if (!progress.categoryProgress[cat]) {
+        progress.categoryProgress[cat] = { correct: 0, total: 0 };
       }
-      progress.categoryProgress[category].correct += stats.correct;
-      progress.categoryProgress[category].total += stats.total;
+      progress.categoryProgress[cat].correct += stats.correct;
+      progress.categoryProgress[cat].total += stats.total;
     });
+
+    // Update XP
+    progress.xp += totalTestXp;
+    progress.totalXpEarned += totalTestXp;
+
+    // Update correct streak tracking
+    progress.bestCorrectStreak = Math.max(progress.bestCorrectStreak, currentStreak);
+
+    // Update fastest test time
+    if (passed && (progress.fastestTestTime === null || timeSpent < progress.fastestTestTime)) {
+      progress.fastestTestTime = timeSpent;
+    }
+
+    // Update daily challenges
+    const questionsResult = updateDailyChallengeProgress(progress, 'questions', questions.length);
+    progress = questionsResult.progress;
+
+    const correctResult = updateDailyChallengeProgress(progress, 'correct', score);
+    progress = correctResult.progress;
+
+    const testChallengeResult = updateDailyChallengeProgress(progress, 'test', 1);
+    progress = testChallengeResult.progress;
+
+    // Show challenge completion toasts
+    [...questionsResult.completedChallenges, ...correctResult.completedChallenges, ...testChallengeResult.completedChallenges]
+      .forEach(challenge => {
+        toast.success(`🎯 Challenge Complete: ${challenge.description}`, {
+          description: `+${challenge.xpReward} XP`,
+        });
+      });
 
     saveProgress(progress);
 
-    navigate("/test-results", { state: { testResult } });
+    navigate("/test-results", { state: { testResult, totalXpEarned: totalTestXp } });
   };
 
   const minutes = Math.floor(timeLeft / 60);
@@ -447,6 +524,11 @@ const PracticeTest = () => {
                 </span>
               </>
             )}
+            <span className="text-muted-foreground">•</span>
+            <span className="flex items-center gap-1 font-semibold text-primary">
+              <Zap className="w-3 h-3" />
+              {xpEarned} XP
+            </span>
           </div>
         </div>
       </div>
