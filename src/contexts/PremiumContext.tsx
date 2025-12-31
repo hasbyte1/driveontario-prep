@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { pb, User } from '@/lib/pocketbase';
 import { redirectToCheckout, cancelSubscription, isDemoMode, demoCheckout, isBackendConfigured } from '@/lib/stripe';
+import { validateLicense, redeemLicenseKey, LicenseInfo, RedeemResponse } from '@/lib/license-api';
 
 // Premium feature limits
 export const FREE_LIMITS = {
@@ -54,6 +55,9 @@ interface PremiumState {
   isPremium: boolean;
   plan: PlanType;
   expiresAt: string | null;
+  // License info
+  hasLicense: boolean;
+  licenseInfo: LicenseInfo | null;
   // Daily usage tracking
   questionsToday: number;
   testsToday: number;
@@ -66,6 +70,7 @@ interface PremiumState {
 interface PremiumContextType {
   state: PremiumState;
   isPremium: boolean;
+  hasLicense: boolean;
   canAccessFeature: (feature: keyof typeof FREE_LIMITS) => boolean;
   getRemainingQuestions: () => number;
   getRemainingTests: () => number;
@@ -73,6 +78,7 @@ interface PremiumContextType {
   incrementTestCount: () => void;
   upgradeToPremium: (plan: PlanType) => Promise<boolean>;
   cancelPremium: () => Promise<boolean>;
+  redeemLicense: (key: string) => Promise<RedeemResponse>;
   showPaywall: boolean;
   setShowPaywall: (show: boolean) => void;
   paywallFeature: string | null;
@@ -87,6 +93,8 @@ const getDefaultState = (): PremiumState => ({
   isPremium: false,
   plan: 'free',
   expiresAt: null,
+  hasLicense: false,
+  licenseInfo: null,
   questionsToday: 0,
   testsToday: 0,
   lastResetDate: new Date().toISOString().split('T')[0],
@@ -110,7 +118,7 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
   const [paywallFeature, setPaywallFeature] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Sync premium status from backend
+  // Sync premium status from backend (includes license check)
   const syncPremiumStatus = useCallback(async () => {
     if (!pb.authStore.isValid) return;
 
@@ -119,15 +127,38 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     try {
       const user = pb.authStore.record as User;
       if (user) {
-        const isPremium = user.isPremium || false;
-        const plan = (user.premiumPlan as PlanType) || 'free';
-        const expiresAt = user.premiumExpiresAt || null;
+        // Get user premium status from auth record
+        let isPremium = user.isPremium || false;
+        let plan = (user.premiumPlan as PlanType) || 'free';
+        let expiresAt = user.premiumExpiresAt || null;
+
+        // Also check license status
+        let hasLicense = false;
+        let licenseInfo: LicenseInfo | null = null;
+
+        try {
+          const licenseResult = await validateLicense();
+          hasLicense = licenseResult.hasLicense;
+          if (licenseResult.license) {
+            licenseInfo = licenseResult.license;
+            // If user has a valid license, they're premium
+            if (hasLicense) {
+              isPremium = true;
+              plan = licenseResult.license.plan as PlanType;
+              expiresAt = licenseResult.license.expiresAt;
+            }
+          }
+        } catch (licenseError) {
+          console.error('Failed to validate license:', licenseError);
+        }
 
         setState(prev => ({
           ...prev,
           isPremium,
           plan,
           expiresAt,
+          hasLicense,
+          licenseInfo,
           isSyncing: false,
           lastSyncedAt: new Date().toISOString(),
         }));
@@ -344,11 +375,37 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
     setShowPaywall(true);
   };
 
+  const redeemLicense = async (key: string): Promise<RedeemResponse> => {
+    setIsProcessing(true);
+
+    try {
+      const result = await redeemLicenseKey(key);
+
+      if (result.success) {
+        // Refresh premium status to get updated state
+        await syncPremiumStatus();
+        setShowPaywall(false);
+      }
+
+      setIsProcessing(false);
+      return result;
+    } catch (error) {
+      console.error('License redemption failed:', error);
+      setIsProcessing(false);
+      return {
+        success: false,
+        message: 'Failed to redeem license',
+        error: 'An unexpected error occurred',
+      };
+    }
+  };
+
   return (
     <PremiumContext.Provider
       value={{
         state,
         isPremium,
+        hasLicense: state.hasLicense,
         canAccessFeature,
         getRemainingQuestions,
         getRemainingTests,
@@ -356,6 +413,7 @@ export const PremiumProvider: React.FC<{ children: ReactNode }> = ({ children })
         incrementTestCount,
         upgradeToPremium,
         cancelPremium: cancelPremiumSubscription,
+        redeemLicense,
         showPaywall,
         setShowPaywall,
         paywallFeature,
