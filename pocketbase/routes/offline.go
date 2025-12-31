@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"driveprep/services"
+
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -252,7 +254,11 @@ func RegisterOfflineRoutes(app core.App, se *core.ServeEvent) {
 		}
 
 		// Decrypt and prepare questions for offline storage
-		encService := GetEncryptionService()
+		encService, err := services.NewEncryption()
+		if err != nil {
+			return e.JSON(http.StatusInternalServerError, map[string]string{"error": "Failed to fetch questions"})
+		}
+
 		result := make([]map[string]interface{}, 0, len(questions))
 
 		for _, q := range questions {

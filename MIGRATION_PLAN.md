@@ -293,7 +293,7 @@ STRIPE_PRICE_YEARLY=price_...
 STRIPE_PRICE_LIFETIME=price_...
 
 # Encryption
-QUESTION_ENCRYPTION_KEY=...  # 32-byte hex
+ENCRYPTION_KEY=...  # 32-byte hex
 LICENSE_SIGNING_KEY=...       # RSA private key
 
 # Security

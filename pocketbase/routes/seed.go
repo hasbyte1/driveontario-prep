@@ -77,7 +77,7 @@ func handleSeedQuestions(app core.App, e *core.RequestEvent) error {
 	}
 
 	// Initialize encryption
-	encryption, err := services.NewQuestionEncryption()
+	encryption, err := services.NewEncryption()
 	if err != nil {
 		return e.JSON(http.StatusInternalServerError, map[string]string{
 			"error": fmt.Sprintf("Encryption error: %v", err),

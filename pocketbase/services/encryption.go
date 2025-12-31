@@ -17,19 +17,19 @@ var (
 	ErrEncryptionDisabled = errors.New("encryption is disabled (no key configured)")
 )
 
-// QuestionEncryption handles encryption/decryption of question data
-type QuestionEncryption struct {
+// Encryption handles encryption/decryption of data
+type Encryption struct {
 	key     []byte
 	enabled bool
 }
 
-// NewQuestionEncryption creates a new encryption service
-// Uses QUESTION_ENCRYPTION_KEY environment variable (32 bytes as hex string)
-func NewQuestionEncryption() (*QuestionEncryption, error) {
-	keyHex := os.Getenv("QUESTION_ENCRYPTION_KEY")
+// NewEncryption creates a new encryption service
+// Uses ENCRYPTION_KEY environment variable (32 bytes as hex string)
+func NewEncryption() (*Encryption, error) {
+	keyHex := os.Getenv("ENCRYPTION_KEY")
 	if keyHex == "" {
 		// Encryption disabled - return service in passthrough mode
-		return &QuestionEncryption{enabled: false}, nil
+		return &Encryption{enabled: false}, nil
 	}
 
 	key, err := hex.DecodeString(keyHex)
@@ -41,20 +41,20 @@ func NewQuestionEncryption() (*QuestionEncryption, error) {
 		return nil, ErrInvalidKey
 	}
 
-	return &QuestionEncryption{
+	return &Encryption{
 		key:     key,
 		enabled: true,
 	}, nil
 }
 
 // IsEnabled returns whether encryption is enabled
-func (e *QuestionEncryption) IsEnabled() bool {
+func (e *Encryption) IsEnabled() bool {
 	return e.enabled
 }
 
 // Encrypt encrypts plaintext using AES-256-GCM
 // Returns base64-encoded ciphertext (nonce prepended)
-func (e *QuestionEncryption) Encrypt(plaintext string) (string, error) {
+func (e *Encryption) Encrypt(plaintext string) (string, error) {
 	if !e.enabled {
 		// Passthrough mode - just base64 encode (for development)
 		return base64.StdEncoding.EncodeToString([]byte(plaintext)), nil
@@ -80,7 +80,7 @@ func (e *QuestionEncryption) Encrypt(plaintext string) (string, error) {
 }
 
 // Decrypt decrypts base64-encoded ciphertext using AES-256-GCM
-func (e *QuestionEncryption) Decrypt(encodedCiphertext string) (string, error) {
+func (e *Encryption) Decrypt(encodedCiphertext string) (string, error) {
 	if !e.enabled {
 		// Passthrough mode - just base64 decode
 		plaintext, err := base64.StdEncoding.DecodeString(encodedCiphertext)

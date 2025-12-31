@@ -59,11 +59,11 @@ type ValidateResponse struct {
 	XPEarned      int    `json:"xpEarned"`
 }
 
-var encryption *services.QuestionEncryption
+var encryption *services.Encryption
 
 func initEncryption() error {
 	var err error
-	encryption, err = services.NewQuestionEncryption()
+	encryption, err = services.NewEncryption()
 	return err
 }
 
