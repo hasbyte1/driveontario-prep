@@ -35,6 +35,7 @@ func main() {
 		routes.RegisterSeedRoutes(app, se)
 		routes.RegisterTestRoutes(app, se)
 		routes.RegisterLicenseRoutes(app, se)
+		routes.RegisterOfflineRoutes(app, se)
 
 		// Serves static files from the provided public dir (if exists)
 		se.Router.GET("/{path...}", apis.Static(os.DirFS("./pb_public"), false))
