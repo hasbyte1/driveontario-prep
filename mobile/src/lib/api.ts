@@ -29,12 +29,13 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const token = await this.getAuthToken();
 
-    const headers: HeadersInit = {
+    const headers: HeadersInit_ = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
 
     if (token) {
+      // @ts-ignore
       headers.Authorization = `Bearer ${token}`;
     }
 

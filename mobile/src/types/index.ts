@@ -176,3 +176,5 @@ export type AuthStackParamList = {
   Register: undefined;
   ForgotPassword: undefined;
 };
+
+export type {Category} from '../lib/config';

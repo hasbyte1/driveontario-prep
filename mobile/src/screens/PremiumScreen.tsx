@@ -23,7 +23,7 @@ export function PremiumScreen() {
   const handleSubscribe = async () => {
     setIsLoading(true);
     // TODO: Implement in-app purchase with react-native-iap
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve: (v?: any) => void) => setTimeout(resolve, 1500));
     setIsLoading(false);
 
     Alert.alert(
@@ -35,7 +35,7 @@ export function PremiumScreen() {
 
   const handleRestorePurchases = async () => {
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve: (v?: any) => void) => setTimeout(resolve, 1000));
     setIsLoading(false);
     await refreshUser();
     Alert.alert('Restore', 'No previous purchases found.');

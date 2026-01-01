@@ -1,14 +1,14 @@
-import {MMKV} from 'react-native-mmkv';
+import {createMMKV, MMKV} from 'react-native-mmkv';
 import EncryptedStorage from 'react-native-encrypted-storage';
 
 // Create MMKV instances
 // Default storage for general app data
-export const storage = new MMKV({
+export const storage = createMMKV({
   id: 'driveontario-storage',
 });
 
 // Encrypted storage for sensitive data (uses secure enclave)
-export const secureStorage = new MMKV({
+export const secureStorage = createMMKV({
   id: 'driveontario-secure',
   encryptionKey: 'driveontario-encryption-key-v1',
 });
@@ -95,7 +95,7 @@ export const StorageHelper = {
 
   // Delete
   delete: (key: string): void => {
-    storage.delete(key);
+    storage.remove(key);
   },
 
   // Clear all
@@ -174,7 +174,7 @@ export const SecureStorageHelper = {
   },
 
   delete: (key: string): void => {
-    secureStorage.delete(key);
+    secureStorage.remove(key);
   },
 };
 
@@ -188,6 +188,6 @@ export const zustandMMKVStorage = {
     storage.set(name, value);
   },
   removeItem: (name: string) => {
-    storage.delete(name);
+    storage.remove(name);
   },
 };

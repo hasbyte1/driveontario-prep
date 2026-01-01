@@ -26,7 +26,7 @@ export function ForgotPasswordScreen() {
 
     setIsLoading(true);
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve: (v?: any) => void) => setTimeout(resolve, 1500));
     setIsLoading(false);
     setIsEmailSent(true);
   };
